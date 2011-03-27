@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Agent-based forum</title>
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8"></meta>
+    <script src="jquery.js"></script> 
+    <script src="forum.js"></script> 
+    <script>
+      $('document').ready(function() {
+        forum = new Forum('#space');
+        var start_value = 'Start simulation';
+        var stop_value = 'Stop simulation';
+        $('#start').val(start_value);
+        $('#start').click(function() {
+          if ($(this).val() == start_value) {
+            $(this).val(stop_value);
+          } else {
+            $(this).val(start_value);
+          }
+//          forum.toggleSpace();
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <a href="/">Home</a>
+    <h1>Agent based forum</h1>
+    <div id="content">
+      <h2>Usage</h2>
+      <ol>
+        <li>Step.</li>
+      </ol>
+      <p>
+        <input type="button" value="Next Generation" onclick="life.nextGen();" />
+        <input type="button" id="start" value="Start Life" />
+        <input type="button" value="Clear" onclick="life.clear();" />
+      </p>
+      <canvas id="space" width="2000" height="2000">
+        <strong>Your browser does not support canvas.</strong>
+      </canvas>
+    </div>
+  </body>
+</html>
+ 
