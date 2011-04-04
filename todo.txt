@@ -1,0 +1,5 @@
+Create actor object that can move and locate itself
+- moving entails checking hash for thread and post, then to next, get
+  its id and move on
+- setting true on tree still separate, because can overlap
+- threads maybe as arrays
