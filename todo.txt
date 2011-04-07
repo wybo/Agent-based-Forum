@@ -1,5 +1,9 @@
-Create actor object that can move and locate itself
-- moving entails checking hash for thread and post, then to next, get
-  its id and move on
-- setting true on tree still separate, because can overlap
-- threads maybe as arrays
+Ideas
+Evaluate things such as
+- high karma raise, HN formula
+- threads in reverse order
+- subcomments
+- threads as posts, LL
+- different sizes, get Reddit / early HN data
+Plan B
+- thesis as proposal for how agent based modeling could test

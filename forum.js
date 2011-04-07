@@ -3,7 +3,11 @@ var Post = (function() {
 
   construct = function(options, thread) {
     this.indent = options.indent;
+    this.inserted = options.inserted;
     this.thread = thread;
+    this.id = this.thread.forum.post_id_counter++;
+    this.thread.forum.positions_hash[this.id] = 
+        {thread: options.thread_index, post: options.index};
   };
 
   construct.prototype.next = function() {
@@ -16,6 +20,19 @@ var Post = (function() {
   };
 
   construct.prototype.reply = function() {
+    var position_hash,
+        i;
+    position_hash = this.thread.forum.positions_hash[this.id];
+    post = this.thread.posts[position_hash.post];
+    this.thread.posts.splice(position_hash.post + 1, 0,
+        new Post({indent: post.indent + 1, inserted: true, 
+            index: position_hash.post + 1, thread_index: position_hash.thread}, 
+            post.thread));
+    // Raise post_index for posts below
+    for (i = position_hash.post + 2; i < this.thread.posts.length; i++) {
+      this.thread.forum.positions_hash[this.thread.posts[i].id].post++;
+    }
+    return this.thread.posts[position_hash.post + 1];
   };
 
   construct.prototype.erase_actor = function() {
@@ -24,13 +41,22 @@ var Post = (function() {
   };
 
   construct.prototype.draw = function(x, y) {
-    this.thread.forum.context.strokeStyle = "#000";
-    this.thread.forum.context.beginPath();
-    this.thread.forum.context.arc(x, y, 2, 0, Math.PI * 2, false);
-    this.thread.forum.context.closePath();
-    this.thread.forum.context.stroke();
-    this.thread.forum.context.fillStyle = "#000";
-    this.thread.forum.context.fill();
+    var color;
+    if (this.inserted) {
+      color = "#080";
+    } else {
+      color = "#000";
+    }
+
+    var context = this.thread.forum.context;
+    context.strokeStyle = color;
+    context.beginPath();
+    context.arc(x, y, 2, 0, Math.PI * 2, false);
+    context.closePath();
+    context.stroke();
+    context.fillStyle = color;
+    context.fill();
+    this.inserted = false;
   };
 
   return construct;
@@ -39,12 +65,18 @@ var Post = (function() {
 var ForumThread = (function() {
   var construct;
 
-  construct = function(posts, forum) {
-    this.posts = [];
-    for (var i = 0; i < posts.length; i++) {
-      this.posts.push(new Post(posts[i], this));
-    }
+  construct = function(post_hashes, forum) {
+    var post_hash,
+        thread_index;
     this.forum = forum;
+    this.posts = [];
+    thread_index = this.forum.thread_index_counter++;
+    for (var i = 0; i < post_hashes.length; i++) {
+      post_hash = post_hashes[i];
+      post_hash.index = i;
+      post_hash.thread_index = thread_index;
+      this.posts.push(new Post(post_hash, this));
+    }
   };
 
   construct.prototype.next = function() {
@@ -56,49 +88,66 @@ var ForumThread = (function() {
     }
   };
 
+  construct.prototype.new_thread = function() {
+    this.forum.threads.push(
+        new ForumThread([{indent: 0, inserted: true}], this.forum));
+    return this.forum.threads[this.forum.threads.length - 1];
+  };
+
   construct.prototype.draw = function(nr) {
     var indent = 0,
         previous_indent = 0,
         indent_stack = [0],
         x_start = nr * 150 + 12,
         x = 0,
-        y = 0;
+        y = 0,
+        context = this.forum.context;
     if (nr > 0) {
-      this.forum.context.beginPath();
-      this.forum.context.strokeStyle = "#999";
-      this.forum.context.moveTo(x_start - 143, 20);
-      this.forum.context.lineTo(x_start - 2, 20);
-      this.forum.context.stroke();
-      this.forum.context.closePath();
+      context.beginPath();
+      context.strokeStyle = this.path_color(this.posts[0]);
+      context.moveTo(x_start - 143, 20);
+      context.lineTo(x_start - 2, 20);
+      context.stroke();
+      context.closePath();
     }
+
     this.posts[0].draw(x_start, 20);
     if (this.posts[0].actor) {
       this.posts[0].actor.draw(x_start, 20);
     }
+
     for (var i = 1; i < this.posts.length; i++) {
       indent = this.posts[i].indent;
       previous_indent = this.posts[i - 1].indent;
       x = x_start + (indent - 1) * 12;
       y = i * 20;
-      this.posts[i].draw(x + 12, y + 20);
       if (this.posts[i].actor) {
         this.posts[i].actor.draw(x + 12, y + 20);
       }
-      this.forum.context.beginPath();
-      this.forum.context.strokeStyle = "#999";
+      context.beginPath();
+      context.strokeStyle = this.path_color(this.posts[i]);
       if (indent > previous_indent) {
-        this.forum.context.moveTo(x + 1, y + 2);
-        this.forum.context.lineTo(x + 6, y + 12);
+        context.moveTo(x + 1, y + 2);
+        context.lineTo(x + 6, y + 12);
       } else if (indent < previous_indent) {
-        this.forum.context.moveTo(x + 6, indent_stack[indent]);
-        this.forum.context.lineTo(x + 6, y);
+        context.moveTo(x + 6, indent_stack[indent]);
+        context.lineTo(x + 6, y);
       } else {
-        this.forum.context.moveTo(x + 6, y);
+        context.moveTo(x + 6, y);
       }
-      this.forum.context.lineTo(x + 6, y + 20);
-      this.forum.context.stroke();
-      this.forum.context.closePath();
+      context.lineTo(x + 6, y + 20);
+      context.stroke();
+      context.closePath();
+      this.posts[i].draw(x + 12, y + 20);
       indent_stack[indent] = y + 20;
+    }
+  };
+
+  construct.prototype.path_color = function(post) {
+    if (post.inserted) {
+      return "#0B0";
+    } else {
+      return "#999";
     }
   };
 
@@ -109,18 +158,58 @@ var Actor = (function() {
   var construct;
 
   construct = function(options, forum) {
-    this.position = options.position;
+    // The global forum
     this.forum = forum;
+    // The position, offline if false
+    this.position = (options.position ? options.position : false);
+    // Constants, chances out of 1000
+    this.new_thread_chance = 2;
+    this.new_post_chance = 20;
+    this.next_thread_chance = 100;
+    // Variable attributes
+    this.stamina = Math.floor(Math.random()*21);
+  };
+
+  construct.prototype.run = function() {
+    var roll = Math.floor(Math.random()*1001);
+    if (this.position === false) {
+      if (roll < this.stamina) {
+        this.go_online();
+      } else {
+        this.stamina = this.stamina + 1;
+      }
+    } else {
+      if (this.stamina < 0) {
+        this.go_offline();
+      } else {
+        if (roll < this.new_thread_chance) {
+          this.to_new_thread();
+        } else if ((roll = roll - this.new_thread_chance) < this.new_post_chance) {
+          this.to_reply();
+        } else {
+          this.to_next_post();
+          this.stamina--;
+        }
+      }
+    }
   };
 
   construct.prototype.to_next_post = function() {
     var post = this.post().erase_actor().next();
-    this.position = post.id;
+    if (post) {
+      this.position = post.id;
+    } else {
+      this.to_next_thread();
+    }
   };
 
   construct.prototype.to_next_thread = function() {
     var thread = this.post().erase_actor().thread.next();
-    this.position = thread.posts[0].id;
+    if (thread) {
+      this.position = thread.posts[0].id;
+    } else {
+      this.go_offline();
+    }
   };
 
   construct.prototype.to_reply = function() {
@@ -128,9 +217,23 @@ var Actor = (function() {
     this.position = post.id;
   };
 
+  construct.prototype.to_new_thread = function() {
+    var thread = this.post().erase_actor().thread.new_thread();
+    this.position = thread.posts[0].id;
+  };
+
   construct.prototype.post = function() {
     var position_hash = this.forum.positions_hash[this.position];
     return this.forum.threads[position_hash.thread].posts[position_hash.post];
+  };
+
+  construct.prototype.go_offline = function() {
+    this.post().erase_actor();
+    this.position = false;
+  };
+
+  construct.prototype.go_online = function() {
+    this.position = this.forum.threads[0].posts[0].id;
   };
 
   construct.prototype.erase = function(post) {
@@ -138,25 +241,26 @@ var Actor = (function() {
   };
 
   construct.prototype.draw = function(x, y) {
+    var context = this.forum.context;
     // head
-    this.forum.context.strokeStyle = "#F00";
-    this.forum.context.beginPath();
-    this.forum.context.arc(x, y, 4, 0, Math.PI * 2, false);
-    this.forum.context.closePath();
-    this.forum.context.stroke();
+    context.strokeStyle = "#F00";
+    context.beginPath();
+    context.arc(x, y, 4, 0, Math.PI * 2, false);
+    context.closePath();
+    context.stroke();
     // body
-    this.forum.context.beginPath();
-    this.forum.context.moveTo(x + 1, y + 6);
-    this.forum.context.lineTo(x + 4, y + 5);
-    this.forum.context.moveTo(x - 1, y + 6);
-    this.forum.context.lineTo(x - 4, y + 9);
-    this.forum.context.moveTo(x, y + 4);
-    this.forum.context.lineTo(x, y + 9);
-    this.forum.context.lineTo(x + 3, y + 14);
-    this.forum.context.moveTo(x, y + 9);
-    this.forum.context.lineTo(x - 3, y + 14);
-    this.forum.context.stroke();
-    this.forum.context.closePath();
+    context.beginPath();
+    context.moveTo(x + 1, y + 6);
+    context.lineTo(x + 4, y + 5);
+    context.moveTo(x - 1, y + 6);
+    context.lineTo(x - 4, y + 9);
+    context.moveTo(x, y + 4);
+    context.lineTo(x, y + 9);
+    context.lineTo(x + 3, y + 14);
+    context.moveTo(x, y + 9);
+    context.lineTo(x - 3, y + 14);
+    context.stroke();
+    context.closePath();
   };
 
   return construct;
@@ -166,12 +270,19 @@ var Forum = (function() {
   var construct;
 
   construct = function(canvasId) {
+    this.initCanvas(canvasId);
+    this.reset();
+  };
+
+  construct.prototype.reset = function() {
     var id,
         i,
         j,
         position_hash;
-    this.initCanvas(canvasId);
 
+    this.post_id_counter = 0;
+    this.thread_index_counter = 0;
+    this.positions_hash = {};
     this.threads = [
       new ForumThread([
         {indent: 0},
@@ -211,40 +322,26 @@ var Forum = (function() {
         new Actor({position: 10}, this),
         new Actor({position: 11}, this)
       ];
-
-    id = 0;
-    this.positions_hash = {};
-    for (i = 0; i < this.threads.length; i++) {
-      for (j = 0; j < this.threads[i].posts.length; j++) {
-        this.threads[i].posts[j].id = id;
-        this.positions_hash[id] = {thread: i, post: j};
-        id++;
-      }
+    for (i = 0; i < 20; i++) {
+      this.actors.push(new Actor({}, this));
     }
-    this.run();
+    this.draw();
   };
 
   construct.prototype.run = function() {
-    this.draw();
     for (i = 0; i < this.actors.length; i++) {
-      this.actors[i].to_next_post();
+      this.actors[i].run();
     }
-    alert(1);
-    this.draw();
-    for (i = 0; i < this.actors.length; i++) {
-      if (i == 1) {
-        this.actors[i].reply();
-      }
-    }
-    alert(1);
     this.draw();
   };
 
   construct.prototype.draw = function() {
     this.canvas.width = this.canvas.width;
     for (i = 0; i < this.actors.length; i++) {
-      position_hash = this.positions_hash[this.actors[i].position];
-      this.threads[position_hash.thread].posts[position_hash.post].actor = this.actors[i];
+      if (this.actors[i].position) {
+        position_hash = this.positions_hash[this.actors[i].position];
+        this.threads[position_hash.thread].posts[position_hash.post].actor = this.actors[i];
+      }
     }
     for (i = 0; i < this.threads.length; i++) {
       this.threads[i].draw(i);
@@ -257,6 +354,13 @@ var Forum = (function() {
   };
 
   construct.prototype.toggleRun = function() {
+    if (!this.running) {
+      this.running = true;
+      this.timeout = setInterval("forum.run()", 100);
+    } else {
+      this.running = false;
+      clearInterval(this.timeout);
+    }
   };
 
   return construct;
