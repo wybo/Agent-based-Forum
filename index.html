@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Agent-based forum</title>
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8"></meta>
+    <script src="jquery.js"></script> 
+    <script src="forum.js"></script> 
+    <script>
+      $('document').ready(function() {
+        forum = new Forum('#space');
+        var start_value = 'Start simulation';
+        var pause_value = 'Pause simulation';
+        $('#start').val(start_value);
+        $('#start').click(function() {
+          if ($(this).val() == start_value) {
+            $(this).val(pause_value);
+          } else {
+            $(this).val(start_value);
+          }
+          forum.toggleRun();
+        });
+        var o_start_value = 'New threads first';
+        var o_stop_value = 'Old threads first';
+        $('#order').val(o_start_value);
+        $('#order').click(function() {
+          if ($(this).val() == o_start_value) {
+            $(this).val(o_stop_value);
+          } else {
+            $(this).val(o_start_value);
+          }
+          forum.toggleOrder();
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <h1>Agent based forum</h1>
+    <h4>by Wybo Wiersma</h4>
+    25 agents posting on a forum, <a href="forum.js.html">view source</a>
+    <div id="content">
+      <h2>Usage</h2>
+      <ul>
+        <li>Click <i>Next generation</i> to run step by step</li>
+        <li><i>Start/Pause simulation</i> to toggle running it continuously</li>
+        <li><i>Old/New threads first</i> to toggle the counter-factual
+        of showing old threads to new users first (on the left)</li>
+        <li><i>Reset</i> returns it to the start condition</li>
+      </ul>
+      <p>
+        <input type="button" value="Next generation" onclick="forum.run();" />
+        <input type="button" id="start" value="Start simulation" /> 
+        <input type="button" id="order" value="New threads first" /> 
+        <input type="button" value="Reset" onclick="forum.reset();" />
+      </p>
+      <canvas id="space" width="3000" height="2000">
+        <strong>Your browser does not support canvas.</strong>
+      </canvas>
+    </div>
+    Copyright: (c) 2011 Wybo Wiersma, Available under the 
+    <a href="http://www.gnu.org/licenses/agpl.html">Affero GPL, v3</a>
+  </body>
+</html>
+ 

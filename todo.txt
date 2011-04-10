@@ -1,9 +1,0 @@
-Ideas
-Evaluate things such as
-- high karma raise, HN formula
-- threads in reverse order
-- subcomments
-- threads as posts, LL
-- different sizes, get Reddit / early HN data
-Plan B
-- thesis as proposal for how agent based modeling could test

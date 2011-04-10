@@ -1,3 +1,18 @@
+// Copyright: (c) 2011 Wybo Wiersma <mail@wybowiersma.net>
+//
+// Available under the Affero GPL v3, http://www.gnu.org/licenses/agpl.html
+//
+// See Actors construct.prototype.run (halfway down) for the core logic
+
+var ABF = {};
+ABF.DIRECTIONS = {oldnew: 0, newold: 1};
+ABF.INITIAL_DIRECTION = ABF.DIRECTIONS.newold; // New threads shown first
+
+// Chances out of a thousand
+ABF.NEW_THREAD_CHANCE = 2;
+ABF.NEW_POST_CHANGE = 20; // Interest is added
+ABF.INITIAL_INTEREST = 20; // Starts out at random from zero to given value
+
 var Post = (function() {
   var construct;
 
@@ -12,7 +27,7 @@ var Post = (function() {
 
   construct.prototype.next = function() {
     var position_hash = this.thread.forum.positions_hash[this.id];
-    if (this.thread.posts.length > position_hash.post + 1) {
+    if (position_hash.post + 1 < this.thread.posts.length) {
       return this.thread.posts[position_hash.post + 1];
     } else {
       return false;
@@ -81,10 +96,18 @@ var ForumThread = (function() {
 
   construct.prototype.next = function() {
     var position_hash = this.forum.positions_hash[this.posts[0].id];
-    if (this.forum.threads.length > position_hash.thread + 1) {
-      return this.forum.threads[position_hash.thread + 1];
+    if (this.forum.direction == ABF.DIRECTIONS.oldnew) {
+      if (position_hash.thread + 1 < this.forum.threads.length) {
+        return this.forum.threads[position_hash.thread + 1];
+      } else {
+        return false;
+      }
     } else {
-      return false;
+      if (position_hash.thread > 1) {
+        return this.forum.threads[position_hash.thread - 1];
+      } else {
+        return false;
+      }
     }
   };
 
@@ -98,14 +121,14 @@ var ForumThread = (function() {
     var indent = 0,
         previous_indent = 0,
         indent_stack = [0],
-        x_start = nr * 150 + 12,
+        x_start = nr * 110 + 12,
         x = 0,
         y = 0,
         context = this.forum.context;
     if (nr > 0) {
       context.beginPath();
       context.strokeStyle = this.path_color(this.posts[0]);
-      context.moveTo(x_start - 143, 20);
+      context.moveTo(x_start - 103, 20);
       context.lineTo(x_start - 2, 20);
       context.stroke();
       context.closePath();
@@ -162,33 +185,34 @@ var Actor = (function() {
     this.forum = forum;
     // The position, offline if false
     this.position = (options.position ? options.position : false);
-    // Constants, chances out of 1000
-    this.new_thread_chance = 2;
-    this.new_post_chance = 20;
-    this.next_thread_chance = 100;
+    this.new_thread_chance = ABF.NEW_THREAD_CHANCE;
+    this.new_post_chance = ABF.NEW_POST_CHANGE;
+    // else to next post
     // Variable attributes
-    this.stamina = Math.floor(Math.random()*21);
+    this.interest = Math.floor(Math.random() * (ABF.INITIAL_INTEREST + 1));
   };
 
   construct.prototype.run = function() {
     var roll = Math.floor(Math.random()*1001);
-    if (this.position === false) {
-      if (roll < this.stamina) {
+    if (this.position === false) { // is offline
+      if (this.interest > roll) { // if interest greater than roll
         this.go_online();
       } else {
-        this.stamina = this.stamina + 1;
+        this.interest = this.interest + 1; // regenerate interest
       }
-    } else {
-      if (this.stamina < 0) {
+    } else { // is visiting forum
+      // this.own_post_bonus() could be added;
+      if (this.interest < 0) { // no interest left, leave
         this.go_offline();
       } else {
-        if (roll < this.new_thread_chance) {
+        if (roll <= this.new_thread_chance) {
           this.to_new_thread();
-        } else if ((roll = roll - this.new_thread_chance) < this.new_post_chance) {
+        } else if ((roll = roll - this.new_thread_chance) <= this.new_post_chance + this.interest) {
+          // post_chance + interest larger than roll, reply
           this.to_reply();
         } else {
           this.to_next_post();
-          this.stamina--;
+          this.interest--; // lose interest / satisfy need to read
         }
       }
     }
@@ -233,7 +257,11 @@ var Actor = (function() {
   };
 
   construct.prototype.go_online = function() {
-    this.position = this.forum.threads[0].posts[0].id;
+    if (this.forum.direction == ABF.DIRECTIONS.oldnew) {
+      this.position = this.forum.threads[0].posts[0].id;
+    } else {
+      this.position = this.forum.threads[this.forum.threads.length - 1].posts[0].id;
+    }
   };
 
   construct.prototype.erase = function(post) {
@@ -275,6 +303,11 @@ var Forum = (function() {
   };
 
   construct.prototype.reset = function() {
+    this.direction = ABF.INITIAL_DIRECTION;
+    this.restart();
+  };
+
+  construct.prototype.restart = function() {
     var id,
         i,
         j,
@@ -317,12 +350,12 @@ var Forum = (function() {
       ], this)];
 
     this.actors = [
-        new Actor({position: 0}, this),
+        new Actor({position: 1}, this),
         new Actor({position: 8}, this),
         new Actor({position: 10}, this),
         new Actor({position: 11}, this)
       ];
-    for (i = 0; i < 20; i++) {
+    for (i = 0; i < 21; i++) {
       this.actors.push(new Actor({}, this));
     }
     this.draw();
@@ -343,14 +376,29 @@ var Forum = (function() {
         this.threads[position_hash.thread].posts[position_hash.post].actor = this.actors[i];
       }
     }
-    for (i = 0; i < this.threads.length; i++) {
-      this.threads[i].draw(i);
+    if (this.direction == ABF.DIRECTIONS.oldnew) {
+      for (i = 0; i < this.threads.length; i++) {
+        this.threads[i].draw(i);
+      }
+    } else {
+      for (i = this.threads.length - 1; i >= 0; i--) {
+        this.threads[i].draw(this.threads.length - 1 - i);
+      }
     }
   };
 
   construct.prototype.initCanvas = function(canvasId) {
     this.canvas = $(canvasId).get(0);
     this.context = this.canvas.getContext("2d");
+  };
+
+  construct.prototype.toggleOrder = function() {
+    if (this.direction == ABF.DIRECTIONS.oldnew) {
+      this.direction = ABF.DIRECTIONS.newold;
+    } else {
+      this.direction = ABF.DIRECTIONS.oldnew;
+    }
+    this.restart();
   };
 
   construct.prototype.toggleRun = function() {
