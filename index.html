@@ -4,6 +4,10 @@
     <title>Agent-based forum</title>
     <meta http-equiv="Content-type" content="text/html;charset=UTF-8"></meta>
     <script src="jquery.js"></script> 
+    <script>window.exports = {}</script>
+    <script src="yaml.js"></script> 
+    <script src="thread_heat_map.tsort_false.collect_rating.json.js"></script> 
+    <script src="thread_heat_map.tsort_false.collect_time.json.js"></script> 
     <script src="forum.js"></script> 
     <script>
       $('document').ready(function() {
@@ -52,7 +56,7 @@
         <input type="button" id="order" value="New threads first" /> 
         <input type="button" value="Reset" onclick="forum.reset();" />
       </p>
-      <canvas id="space" width="3000" height="2000">
+      <canvas id="space" width="3000" height="8000">
         <strong>Your browser does not support canvas.</strong>
       </canvas>
     </div>

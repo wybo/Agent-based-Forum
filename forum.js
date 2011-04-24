@@ -19,6 +19,7 @@ var Post = (function() {
   construct = function(options, thread) {
     this.indent = options.indent;
     this.inserted = options.inserted;
+    this.color = options.color;
     this.thread = thread;
     this.id = this.thread.forum.post_id_counter++;
     this.thread.forum.positions_hash[this.id] = 
@@ -59,6 +60,8 @@ var Post = (function() {
     var color;
     if (this.inserted) {
       color = "#080";
+    } else if (this.color) {
+      color = this.color;
     } else {
       color = "#000";
     }
@@ -80,7 +83,7 @@ var Post = (function() {
 var ForumThread = (function() {
   var construct;
 
-  construct = function(post_hashes, forum) {
+  construct = function(post_hashes, forum, options) {
     var post_hash,
         thread_index;
     this.forum = forum;
@@ -91,6 +94,11 @@ var ForumThread = (function() {
       post_hash.index = i;
       post_hash.thread_index = thread_index;
       this.posts.push(new Post(post_hash, this));
+    }
+    if (options) {
+      this.squeeze = options.squeeze;
+    } else {
+      this.squeeze = false;
     }
   };
 
@@ -121,14 +129,15 @@ var ForumThread = (function() {
     var indent = 0,
         previous_indent = 0,
         indent_stack = [0],
-        x_start = nr * 110 + 12,
+        spacing = 150,
+        x_start = nr * (spacing + 10) + 12,
         x = 0,
         y = 0,
         context = this.forum.context;
     if (nr > 0) {
       context.beginPath();
       context.strokeStyle = this.path_color(this.posts[0]);
-      context.moveTo(x_start - 103, 20);
+      context.moveTo(x_start - (spacing + 3), 20);
       context.lineTo(x_start - 2, 20);
       context.stroke();
       context.closePath();
@@ -139,11 +148,19 @@ var ForumThread = (function() {
       this.posts[0].actor.draw(x_start, 20);
     }
 
+    squeeze_branch_i = -1;
     for (var i = 1; i < this.posts.length; i++) {
       indent = this.posts[i].indent;
       previous_indent = this.posts[i - 1].indent;
       x = x_start + (indent - 1) * 12;
-      y = i * 20;
+      if (this.squeeze) {
+        if (this.posts[i].indent == 1) {
+          squeeze_branch_i++;
+        }
+        y = (squeeze_branch_i + this.posts[i].indent) * 20;
+      } else {
+        y = i * 20;
+      }
       if (this.posts[i].actor) {
         this.posts[i].actor.draw(x + 12, y + 20);
       }
@@ -347,8 +364,12 @@ var Forum = (function() {
         {indent: 2},
         {indent: 1},
         {indent: 1}
-      ], this)];
-
+      ], this),
+      new ForumThread(
+        thread_tsort_false_collect_rating.items, this, {squeeze: true}),
+      new ForumThread(
+        thread_tsort_false_collect_time.items, this, {squeeze: true})];
+    
     this.actors = [
         new Actor({position: 1}, this),
         new Actor({position: 8}, this),
