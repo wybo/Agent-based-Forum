@@ -134,7 +134,7 @@ var ForumThread = (function() {
     var indent = 0,
         previous_indent = 0,
         indent_stack = [0],
-        spacing = SCL * 220,
+        spacing = SCL * 80,
         height_step = SCL * 20,
         width_step = SCL * 12,
         x_start = nr * (spacing + SCL * 10) + width_step,
@@ -374,18 +374,7 @@ var Forum = (function() {
         {indent: 2},
         {indent: 1},
         {indent: 1}
-      ], this, {barless: true}),
-      new ForumThread( 
-        thread_tsort_true_collect_rating.items, this, {squeeze: true}),
-      new ForumThread(
-        thread_tsort_false_collect_time.items, this, {squeeze: true})
-//      new ForumThread(original_0_tsort_false_collect_original.items, this, {barless: true}),
-//      new ForumThread(original_1_tsort_false_collect_original.items, this, {barless: true}),
-//      new ForumThread(original_2_tsort_false_collect_original.items, this, {barless: true})
-//      new ForumThread(original_0_tsort_false_collect_original_colorize_false.items, this, {barless: true}),
-//      new ForumThread(original_1_tsort_false_collect_original_colorize_false.items, this, {barless: true}),
-//      new ForumThread(original_2_tsort_false_collect_original_colorize_false.items, this, {barless: true})
-        // leftmost
+      ], this, {barless: true})
         ];
     
     this.actors = [
