@@ -13,6 +13,10 @@ ABF.NEW_THREAD_CHANCE = 2;
 ABF.NEW_POST_CHANGE = 20; // Interest is added
 ABF.INITIAL_INTEREST = 20; // Starts out at random from zero to given value
 
+// Layout
+NO_BARS = true;
+SCL = 1; // Scale, 1 is normal
+
 var Post = (function() {
   var construct;
 
@@ -68,8 +72,9 @@ var Post = (function() {
 
     var context = this.thread.forum.context;
     context.strokeStyle = color;
+    context.lineWidth = SCL;
     context.beginPath();
-    context.arc(x, y, 2, 0, Math.PI * 2, false);
+    context.arc(x, y, SCL * 2, 0, Math.PI * 2, false);
     context.closePath();
     context.stroke();
     context.fillStyle = color;
@@ -129,57 +134,61 @@ var ForumThread = (function() {
     var indent = 0,
         previous_indent = 0,
         indent_stack = [0],
-        spacing = 150,
-        x_start = nr * (spacing + 10) + 12,
+        spacing = SCL * 220,
+        height_step = SCL * 20,
+        width_step = SCL * 12,
+        x_start = nr * (spacing + SCL * 10) + width_step,
         x = 0,
         y = 0,
         context = this.forum.context;
-    if (nr > 0) {
+    if ((nr > 0) && (!NO_BARS)) {
       context.beginPath();
       context.strokeStyle = this.path_color(this.posts[0]);
-      context.moveTo(x_start - (spacing + 3), 20);
-      context.lineTo(x_start - 2, 20);
+      context.lineWidth = SCL;
+      context.moveTo(x_start - (spacing + SCL * 3), height_step);
+      context.lineTo(x_start - SCL * 2, height_step);
       context.stroke();
       context.closePath();
     }
 
-    this.posts[0].draw(x_start, 20);
+    this.posts[0].draw(x_start, height_step);
     if (this.posts[0].actor) {
-      this.posts[0].actor.draw(x_start, 20);
+      this.posts[0].actor.draw(x_start, height_step);
     }
 
     squeeze_branch_i = -1;
     for (var i = 1; i < this.posts.length; i++) {
       indent = this.posts[i].indent;
       previous_indent = this.posts[i - 1].indent;
-      x = x_start + (indent - 1) * 12;
+      x = x_start + (indent - 1) * width_step;
       if (this.squeeze) {
         if (this.posts[i].indent == 1) {
           squeeze_branch_i++;
         }
-        y = (squeeze_branch_i + this.posts[i].indent) * 20;
+        y = (squeeze_branch_i + this.posts[i].indent) * height_step;
       } else {
-        y = i * 20;
+        y = i * height_step;
       }
       if (this.posts[i].actor) {
-        this.posts[i].actor.draw(x + 12, y + 20);
+        this.posts[i].actor.draw(x + width_step, y + height_step);
       }
       context.beginPath();
       context.strokeStyle = this.path_color(this.posts[i]);
+      context.lineWidth = SCL;
       if (indent > previous_indent) {
-        context.moveTo(x + 1, y + 2);
-        context.lineTo(x + 6, y + 12);
+        context.moveTo(x + SCL * 1, y + SCL * 2);
+        context.lineTo(x + SCL * 6, y + SCL * 12);
       } else if (indent < previous_indent) {
-        context.moveTo(x + 6, indent_stack[indent]);
-        context.lineTo(x + 6, y);
+        context.moveTo(x + SCL * 6, indent_stack[indent]);
+        context.lineTo(x + SCL * 6, y);
       } else {
-        context.moveTo(x + 6, y);
+        context.moveTo(x + SCL * 6, y);
       }
-      context.lineTo(x + 6, y + 20);
+      context.lineTo(x + SCL * 6, y + height_step);
       context.stroke();
       context.closePath();
-      this.posts[i].draw(x + 12, y + 20);
-      indent_stack[indent] = y + 20;
+      this.posts[i].draw(x + width_step, y + height_step);
+      indent_stack[indent] = y + height_step;
     }
   };
 
@@ -289,21 +298,22 @@ var Actor = (function() {
     var context = this.forum.context;
     // head
     context.strokeStyle = "#F00";
+    context.lineWidth = SCL;
     context.beginPath();
-    context.arc(x, y, 4, 0, Math.PI * 2, false);
+    context.arc(x, y, SCL * 4, 0, Math.PI * 2, false);
     context.closePath();
     context.stroke();
     // body
     context.beginPath();
-    context.moveTo(x + 1, y + 6);
-    context.lineTo(x + 4, y + 5);
-    context.moveTo(x - 1, y + 6);
-    context.lineTo(x - 4, y + 9);
-    context.moveTo(x, y + 4);
-    context.lineTo(x, y + 9);
-    context.lineTo(x + 3, y + 14);
-    context.moveTo(x, y + 9);
-    context.lineTo(x - 3, y + 14);
+    context.moveTo(x + SCL * 1, y + SCL * 6);
+    context.lineTo(x + SCL * 4, y + SCL * 5);
+    context.moveTo(x - SCL * 1, y + SCL * 6);
+    context.lineTo(x - SCL * 4, y + SCL * 9);
+    context.moveTo(x, y + SCL * 4);
+    context.lineTo(x, y + SCL * 9);
+    context.lineTo(x + SCL * 3, y + SCL * 14);
+    context.moveTo(x, y + SCL * 9);
+    context.lineTo(x - SCL * 3, y + SCL * 14);
     context.stroke();
     context.closePath();
   };
@@ -364,11 +374,19 @@ var Forum = (function() {
         {indent: 2},
         {indent: 1},
         {indent: 1}
-      ], this),
+      ], this, {barless: true}),
+      new ForumThread( 
+        thread_tsort_true_collect_rating.items, this, {squeeze: true}),
       new ForumThread(
-        thread_tsort_false_collect_rating.items, this, {squeeze: true}),
-      new ForumThread(
-        thread_tsort_false_collect_time.items, this, {squeeze: true})];
+        thread_tsort_false_collect_time.items, this, {squeeze: true})
+//      new ForumThread(original_0_tsort_false_collect_original.items, this, {barless: true}),
+//      new ForumThread(original_1_tsort_false_collect_original.items, this, {barless: true}),
+//      new ForumThread(original_2_tsort_false_collect_original.items, this, {barless: true})
+//      new ForumThread(original_0_tsort_false_collect_original_colorize_false.items, this, {barless: true}),
+//      new ForumThread(original_1_tsort_false_collect_original_colorize_false.items, this, {barless: true}),
+//      new ForumThread(original_2_tsort_false_collect_original_colorize_false.items, this, {barless: true})
+        // leftmost
+        ];
     
     this.actors = [
         new Actor({position: 1}, this),
