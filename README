@@ -1,0 +1,29 @@
+= Agent-based Forum
+  "Weighting up critical mass"
+
+Agent-based model of users on a forum, or other thread-based platform.
+
+Its aim is examining the impact of structural factors on thread-based 
+platforms ability to attain critical mass.
+
+Examples of such factors are how threads are layed out, in which order
+they are shown (if any), and whether new users get to see new threads
+first...
+
+Still under heavy development. Ideas, comments and feedback welcome
+(mail@wybowiersma.net).
+
+== Usage
+
+Open using Firefox or Google Chrome and click 'Start Simulation'.
+
+Comes with instructions.
+
+== Copyrights
+
+Agent-based Forum and these docs are Copyright (c) 2011 Wybo 
+Wiersma. Agent-based Forum is licensed under the {Affero 
+General Public License}[http://www.gnu.org/licenses/agpl.html]. 
+These docs are available under the {Creative Commons 
+Attribution-Share Alike 
+License}[http://creativecommons.org/licenses/by-sa/3.0/].
