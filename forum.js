@@ -14,7 +14,7 @@ ABF.NEW_POST_CHANGE = 20; // Interest is added
 ABF.INITIAL_INTEREST = 20; // Starts out at random from zero to given value
 
 // Layout
-NO_BARS = true;
+NO_BARS = false;
 SCL = 1; // Scale, 1 is normal
 
 var Post = (function() {
@@ -356,6 +356,34 @@ var Forum = (function() {
         {indent: 1},
         {indent: 1},
         {indent: 2},
+        {indent: 3},
+        {indent: 3}
+      ], this),
+      new ForumThread([ 
+        {indent: 0},
+        {indent: 1},
+        {indent: 2},
+        {indent: 2},
+        {indent: 3},
+        {indent: 4},
+        {indent: 3},
+        {indent: 3},
+        {indent: 2},
+        {indent: 1},
+        {indent: 1}
+      ], this),
+      new ForumThread([
+        {indent: 0},
+        {indent: 1},
+        {indent: 2},
+        {indent: 2},
+        {indent: 1}
+      ], this),
+      new ForumThread([ 
+        {indent: 0},
+        {indent: 1},
+        {indent: 1},
+        {indent: 2},
         {indent: 1},
         {indent: 2},
         {indent: 2},
@@ -374,13 +402,33 @@ var Forum = (function() {
         {indent: 2},
         {indent: 1},
         {indent: 1}
-      ], this, {barless: true})
+      ], this),
+      new ForumThread([
+        {indent: 0},
+        {indent: 1},
+        {indent: 2},
+        {indent: 2},
+        {indent: 1}
+      ], this),
+      new ForumThread([ 
+        {indent: 0},
+        {indent: 1},
+        {indent: 1},
+        {indent: 2}
+      ], this),
+      new ForumThread([ 
+        {indent: 0},
+        {indent: 1}
+      ], this)
         ];
     
     this.actors = [
         new Actor({position: 1}, this),
         new Actor({position: 8}, this),
-        new Actor({position: 10}, this),
+        new Actor({position: 40}, this),
+        new Actor({position: 44}, this),
+        new Actor({position: 37}, this),
+        new Actor({position: 23}, this),
         new Actor({position: 11}, this)
       ];
     for (i = 0; i < 21; i++) {
