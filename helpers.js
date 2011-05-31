@@ -24,7 +24,7 @@ ABF.prepare_actions = function(actions, options) {
     cutoff += fraction;
     actions[i].cutoff = cutoff;
     if (options && options.bind) {
-      actions[i].action = actions[i].action.bind(options.bind);
+      actions[i].action = ABF.bind(options.bind, actions[i].action);
     }
   }
   structure.actions = actions;
@@ -53,6 +53,12 @@ ABF.random_action = function(actions, options) {
       return actions.actions[i].action();
     }
   }
+};
+
+ABF.bind = function(obj, method) {
+  return function() {
+    return method.apply(obj, [].slice.call(arguments));
+  };
 };
 
 // Functions for use in chances

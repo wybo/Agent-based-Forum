@@ -3,18 +3,19 @@ require 'open-uri'
 
 if File.file?("publish_config.rb")
   require 'publish_config.rb'
+else
+  system "rm *.js.html"
 end
 publish_command ||= nil
 
-system "tar -czvf trunk.tgz *"
-
 system "git commit -a"
 system "git push"
+
+system "tar -czvf trunk.tgz *"
 files = Dir.glob("*.js")
 files.delete("jquery.js")
 files.delete("include.js")
 files.push(files.delete("agent_based_forum.js")) # last
-puts files.inspect
 important_parts = []
 files.each do |file_name|
   system "vim #{file_name} -c 'runtime! syntax/2html.vim | wq | q'"
@@ -53,11 +54,10 @@ files.each do |file_name|
     end
     line_number += 1
   end
-  puts lines.join() if file_name == "agent_based_forum.js"
   open("#{file_name}.html", "w") { |file| file.write(lines.join()) }
 end
 if publish_command
   system publish_command
+  system "rm *.js.html"
 end
-system "rm *.js.html"
 system "rm *.tgz"
