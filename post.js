@@ -1,31 +1,29 @@
 // Copyright: (c) 2011 Wybo Wiersma <mail@wybowiersma.net>
 //
 // Available under the Affero GPL v3, http://www.gnu.org/licenses/agpl.html
-//
-// See Actors construct.prototype.run (halfway down) for the core logic
 
 var Post = (function() {
-  var construct,
-      TOPIC_ACTIONS = [];
+  var construct;
   
-  if (ABF.TOPICS) {
-    for (var i = 0; i < ABF.TOPICS; i++) {
-      TOPIC_ACTIONS.push({
-          chance: Math.pow(2, i),                                           
-          action: ABF.arg_returning_function(ABF.TOPICS - i - 1) });
-    }
-    TOPIC_ACTIONS = ABF.prepare_actions(TOPIC_ACTIONS);
-  }
-
   construct = function(options, thread) {
     this.indent = options.indent;
+    /// Post topic attributes
     if (ABF.TOPICS) {
+      this.topic_actions = [];
+      for (var i = 0; i < ABF.TOPICS; i++) {
+        this.topic_actions.push({
+            chance: Math.pow(2, i),                                           
+            action: ABF.arg_returning_function(ABF.TOPICS - i - 1) });
+      }
+      this.topic_actions = ABF.prepare_actions(this.topic_actions);
+
       if (options.interest) {
-        this.topic = ABF.random_action(TOPIC_ACTIONS, {swap: options.interest});
+        this.topic = ABF.random_action(this.topic_actions, {swap: options.interest});
       } else {
-        this.topic = ABF.random_action(TOPIC_ACTIONS);
+        this.topic = ABF.random_action(this.topic_actions);
       }
     }
+    ///
     if (options.color) {
       this.color = options.color;
     } else if (this.topic !== undefined) {

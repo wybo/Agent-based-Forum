@@ -1,8 +1,6 @@
 // Copyright: (c) 2011 Wybo Wiersma <mail@wybowiersma.net>
 //
 // Available under the Affero GPL v3, http://www.gnu.org/licenses/agpl.html
-//
-// See Actors construct.prototype.run (halfway down) for the core logic
 
 var Actor = (function() {
   var construct;
@@ -12,11 +10,8 @@ var Actor = (function() {
     this.forum = forum;
     // The position, offline if false
     this.position = (options.position ? options.position : false);
-    this.new_thread_chance = ABF.NEW_THREAD_CHANCE;
-    this.new_post_chance = ABF.NEW_POST_CHANGE;
-    // else to next post
-    // Variable attributes
-    this.interest = Math.floor(Math.random() * (ABF.INITIAL_INTEREST + 1));
+    /// Agent attributes
+    this.interest = Math.floor(Math.random() * (20 + 1));
     this.actions = [];
     this.actions.push({
         chance: 20,
@@ -28,27 +23,29 @@ var Actor = (function() {
         total: 1000,
         action: this.to_next_post
       });
-      this.actions = ABF.prepare_actions(this.actions, {bind: this});
+    this.actions = ABF.prepare_actions(this.actions, {bind: this});
+    ///
   };
 
+  /// Agent rate and objective functions
   construct.prototype.run = function() {
-    if (this.position === false) { // is offline
+    if (this.position === false) { // is offline, rate function
       var roll = Math.floor(Math.random()*1001);
       if (this.interest > roll) { // if interest greater than roll
         this.go_online();
       } else {
         this.interest = this.interest + 1; // regenerate interest
       }
-    } else { // is visiting forum
+    } else { // is visiting forum, objective function
       // this.own_post_bonus() could be added;
       if (this.interest < 0) { // no interest left, leave
         this.go_offline();
       } else {
-        // } else if ((roll = roll - this.new_thread_chance) <= this.new_post_chance + this.interest) {
         ABF.random_action(this.actions, {boost: [0, this.interest]});
       }
     }
   };
+  ///
 
   construct.prototype.to_next_post = function() {
     var post = this.post().erase_actor().next();
@@ -127,5 +124,3 @@ var Actor = (function() {
 
   return construct;
 }());
-
-

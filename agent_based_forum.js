@@ -1,15 +1,20 @@
 // Copyright: (c) 2011 Wybo Wiersma <mail@wybowiersma.net>
 //
 // Available under the Affero GPL v3, http://www.gnu.org/licenses/agpl.html
-//
-// See Actors construct.prototype.run (halfway down) for the core logic
+
+// Includes
+$.include('helpers.js');
+$.include('post.js');
+$.include('forum_thread.js');
+$.include('actor.js');
+$.include('forum.js');
+
+/// Important parts (excerpts)
+// Settings
 
 var ABF = {};
 ABF.DIRECTIONS = {oldnew: 0, newold: 1};
 ABF.INITIAL_DIRECTION = ABF.DIRECTIONS.newold; // New threads shown first
-
-// Chances out of a thousand
-ABF.INITIAL_INTEREST = 20; // Starts out at random from zero to given value
 
 // Layout
 ABF.NO_BARS = false;
@@ -43,8 +48,4 @@ if (ABF.TOPICS) {
   }
 }
 
-$.include('helpers.js');
-$.include('post.js');
-$.include('forum_thread.js');
-$.include('actor.js');
-$.include('forum.js');
+

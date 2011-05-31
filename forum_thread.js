@@ -1,8 +1,6 @@
 // Copyright: (c) 2011 Wybo Wiersma <mail@wybowiersma.net>
 //
 // Available under the Affero GPL v3, http://www.gnu.org/licenses/agpl.html
-//
-// See Actors construct.prototype.run (halfway down) for the core logic
 
 var ForumThread = (function() {
   var construct;
