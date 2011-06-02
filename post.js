@@ -48,19 +48,32 @@ var Post = (function() {
 
   construct.prototype.reply = function() {
     var position_hash,
+        insert_position = false,
         i;
     position_hash = this.thread.forum.positions_hash[this.id];
     post = this.thread.posts[position_hash.post];
-    this.thread.posts.splice(position_hash.post + 1, 0,
-        new Post({indent: post.indent + 1, index: position_hash.post + 1, 
+    // Find insert position
+    for (i = position_hash.post + 1; i < this.thread.posts.length; i++) {
+      if (insert_position === false) {
+        if (this.thread.posts[i].indent <= post.indent) {
+          insert_position = i;
+        }
+      }
+    }
+    if (insert_position === false) {
+      insert_position = this.thread.posts.length;
+    }
+    // Insert reply at the given position
+    this.thread.posts.splice(insert_position, 0,
+        new Post({indent: post.indent + 1, index: insert_position, 
             interest: post.topic,
             thread_index: position_hash.thread}, 
             post.thread));
     // Raise post_index for posts below
-    for (i = position_hash.post + 2; i < this.thread.posts.length; i++) {
+    for (i = insert_position + 1; i < this.thread.posts.length; i++) {
       this.thread.forum.positions_hash[this.thread.posts[i].id].post++;
     }
-    return this.thread.posts[position_hash.post + 1];
+    return this.thread.posts[insert_position];
   };
 
   construct.prototype.erase_actor = function() {

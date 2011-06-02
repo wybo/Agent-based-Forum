@@ -11,7 +11,8 @@ var Forum = (function() {
   };
 
   construct.prototype.reset = function() {
-    this.direction = ABF.INITIAL_DIRECTION;
+    this.direction = ABF.DEFAULT_DIRECTION;
+    this.mode = ABF.DEFAULT_MODE;
     this.restart();
   };
 
@@ -161,7 +162,7 @@ var Forum = (function() {
   construct.prototype.toggleRun = function() {
     if (!this.running) {
       this.running = true;
-      this.timeout = setInterval("forum.run()", 10);
+      this.timeout = setInterval("forum.run()", 50);
     } else {
       this.running = false;
       clearInterval(this.timeout);

@@ -14,7 +14,9 @@ $.include('forum.js');
 
 var ABF = {};
 ABF.DIRECTIONS = {oldnew: 0, newold: 1};
-ABF.INITIAL_DIRECTION = ABF.DIRECTIONS.newold; // New threads shown first
+ABF.DEFAULT_DIRECTION = ABF.DIRECTIONS.newold; // New threads shown first
+ABF.MODES = {flat: 0, threaded: 1};
+ABF.DEFAULT_MODE = ABF.MODES.flat;
 
 // Layout
 ABF.NO_BARS = false;
