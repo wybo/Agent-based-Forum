@@ -6,7 +6,7 @@ if File.file?("publish_config.rb")
 else
   system "rm *.js.html"
 end
-publish_command ||= nil
+PUBLISH_COMMAND ||= nil
 
 system "git commit -a"
 system "git push"
@@ -56,8 +56,8 @@ files.each do |file_name|
   end
   open("#{file_name}.html", "w") { |file| file.write(lines.join()) }
 end
-if publish_command
-  system publish_command
+if PUBLISH_COMMAND
+  system PUBLISH_COMMAND
   system "rm *.js.html"
 end
 system "rm *.tgz"
