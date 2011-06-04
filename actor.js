@@ -48,7 +48,7 @@ var Actor = (function() {
   ///
 
   construct.prototype.to_next_post = function() {
-    var post = this.post().erase_actor().next();
+    var post = this.post().next();
     if (post) {
       this.position = post.id;
     } else {
@@ -58,7 +58,7 @@ var Actor = (function() {
   };
 
   construct.prototype.to_next_thread = function() {
-    var thread = this.post().erase_actor().thread.next();
+    var thread = this.post().thread.next();
     if (thread) {
       this.position = thread.posts[0].id;
     } else {
@@ -67,12 +67,12 @@ var Actor = (function() {
   };
 
   construct.prototype.to_reply = function() {
-    var post = this.post().erase_actor().reply();
+    var post = this.post().reply();
     this.position = post.id;
   };
 
   construct.prototype.to_new_thread = function() {
-    var thread = this.post().erase_actor().thread.new_thread();
+    var thread = this.post().thread.new_thread();
     this.position = thread.posts[0].id;
   };
 
@@ -82,7 +82,6 @@ var Actor = (function() {
   };
 
   construct.prototype.go_offline = function() {
-    this.post().erase_actor();
     this.position = false;
   };
 
@@ -92,10 +91,6 @@ var Actor = (function() {
     } else {
       this.position = this.forum.threads[this.forum.threads.length - 1].posts[0].id;
     }
-  };
-
-  construct.prototype.erase = function(post) {
-    post.actor = null;
   };
 
   construct.prototype.draw = function(x, y) {

@@ -17,6 +17,7 @@ ABF.DIRECTIONS = {oldnew: 0, newold: 1};
 ABF.DEFAULT_DIRECTION = ABF.DIRECTIONS.newold; // New threads shown first
 ABF.MODES = {flat: 0, threaded: 1};
 ABF.DEFAULT_MODE = ABF.MODES.flat;
+ABF.MAX_THREADS = 18; // threads dropped after this
 
 // Layout
 ABF.NO_BARS = false;
@@ -49,5 +50,3 @@ if (ABF.TOPICS) {
         ', ' + ABF.WHEEL_PART[i - 2 * ABF.TOPIC_MULTIPLIER] + ')');
   }
 }
-
-

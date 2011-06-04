@@ -57,6 +57,7 @@ files.each do |file_name|
   open("#{file_name}.html", "w") { |file| file.write(lines.join()) }
 end
 if PUBLISH_COMMAND
+  puts PUBLISH_COMMAND
   system PUBLISH_COMMAND
   system "rm *.js.html"
 end

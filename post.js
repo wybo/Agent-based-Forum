@@ -76,11 +76,6 @@ var Post = (function() {
     return this.thread.posts[insert_position];
   };
 
-  construct.prototype.erase_actor = function() {
-    this.actor = null;
-    return this;
-  };
-
   construct.prototype.draw = function(x, y) {
     var context = this.thread.forum.context;
     context.strokeStyle = this.color;

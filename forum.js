@@ -13,6 +13,7 @@ var Forum = (function() {
   construct.prototype.reset = function() {
     this.direction = ABF.DEFAULT_DIRECTION;
     this.mode = ABF.DEFAULT_MODE;
+    this.max_threads = ABF.MAX_THREADS;
     this.restart();
   };
 
@@ -25,23 +26,22 @@ var Forum = (function() {
     this.post_id_counter = 0;
     this.thread_index_counter = 0;
     this.positions_hash = {};
-    this.threads = [
-      new ForumThread([
+    this.threads = [];
+    this.append_threads([
+      [
         {indent: 0},
         {indent: 1},
         {indent: 2},
         {indent: 2},
         {indent: 1}
-      ], this),
-      new ForumThread([ 
+      ], [ 
         {indent: 0},
         {indent: 1},
         {indent: 1},
         {indent: 2},
         {indent: 3},
         {indent: 3}
-      ], this),
-      new ForumThread([ 
+      ], [ 
         {indent: 0},
         {indent: 1},
         {indent: 2},
@@ -53,15 +53,13 @@ var Forum = (function() {
         {indent: 2},
         {indent: 1},
         {indent: 1}
-      ], this),
-      new ForumThread([
+      ], [
         {indent: 0},
         {indent: 1},
         {indent: 2},
         {indent: 2},
         {indent: 1}
-      ], this),
-      new ForumThread([ 
+      ], [ 
         {indent: 0},
         {indent: 1},
         {indent: 1},
@@ -71,8 +69,7 @@ var Forum = (function() {
         {indent: 2},
         {indent: 3},
         {indent: 3}
-      ], this),
-      new ForumThread([ 
+      ], [ 
         {indent: 0},
         {indent: 1},
         {indent: 2},
@@ -84,25 +81,21 @@ var Forum = (function() {
         {indent: 2},
         {indent: 1},
         {indent: 1}
-      ], this),
-      new ForumThread([
+      ], [
         {indent: 0},
         {indent: 1},
         {indent: 2},
         {indent: 2},
         {indent: 1}
-      ], this),
-      new ForumThread([ 
+      ], [ 
         {indent: 0},
         {indent: 1},
         {indent: 1},
         {indent: 2}
-      ], this),
-      new ForumThread([ 
+      ], [ 
         {indent: 0},
         {indent: 1}
-      ], this)
-        ];
+      ]]);
     
     this.actors = [
         new Actor({position: 1}, this),
@@ -121,33 +114,17 @@ var Forum = (function() {
 
   construct.prototype.run = function() {
     for (i = 0; i < this.actors.length; i++) {
+      if (this.actors[i].position) {
+        position_hash = this.positions_hash[this.actors[i].position];
+        if (position_hash !== undefined) {
+          this.threads[position_hash.thread].posts[position_hash.post].actor = this.actors[i];
+        } else {
+          this.actors[i].go_offline(); // thread is gone
+        }
+      }
       this.actors[i].run();
     }
     this.draw();
-  };
-
-  construct.prototype.draw = function() {
-    this.canvas.width = this.canvas.width;
-    for (i = 0; i < this.actors.length; i++) {
-      if (this.actors[i].position) {
-        position_hash = this.positions_hash[this.actors[i].position];
-        this.threads[position_hash.thread].posts[position_hash.post].actor = this.actors[i];
-      }
-    }
-    if (this.direction == ABF.DIRECTIONS.oldnew) {
-      for (i = 0; i < this.threads.length; i++) {
-        this.threads[i].draw(i);
-      }
-    } else {
-      for (i = this.threads.length - 1; i >= 0; i--) {
-        this.threads[i].draw(this.threads.length - 1 - i);
-      }
-    }
-  };
-
-  construct.prototype.initCanvas = function(canvasId) {
-    this.canvas = $(canvasId).get(0);
-    this.context = this.canvas.getContext("2d");
   };
 
   construct.prototype.toggleOrder = function() {
@@ -166,6 +143,55 @@ var Forum = (function() {
     } else {
       this.running = false;
       clearInterval(this.timeout);
+    }
+  };
+
+  construct.prototype.append_threads = function(thread_arrays) {
+    for (var i = 1; i < thread_arrays.length; i++) {
+      this.append_thread(thread_arrays[i]);
+    }
+  }
+
+  construct.prototype.append_thread = function(thread_array) {
+    var insert_position;
+    if (this.threads.length >= this.max_threads) {
+      this.threads[0].delete_posts();
+      for (var i = 1; i < this.threads.length; i++) {
+        this.threads[i - 1] = this.threads[i];
+      }
+      for (i in this.positions_hash) {
+        if (this.positions_hash.hasOwnProperty(i)) {
+          this.positions_hash[i].thread--;
+        }
+      }
+      insert_position = this.threads.length - 1;
+    } else {
+      insert_position = this.threads.length;
+    }
+    if (!thread_array) {
+      thread_array = [{indent: 0, inserted: true}];
+    }
+    this.threads[insert_position] = 
+        new ForumThread(thread_array, insert_position, this);
+    return this.threads[insert_position];
+  };
+
+  construct.prototype.initCanvas = function(canvasId) {
+    this.canvas = $(canvasId).get(0);
+    this.context = this.canvas.getContext("2d");
+  };
+
+  construct.prototype.draw = function() {
+    var position_hash;
+    this.canvas.width = this.canvas.width;
+    if (this.direction == ABF.DIRECTIONS.oldnew) {
+      for (i = 0; i < this.threads.length; i++) {
+        this.threads[i].draw(i);
+      }
+    } else {
+      for (i = this.threads.length - 1; i >= 0; i--) {
+        this.threads[i].draw(this.threads.length - 1 - i);
+      }
     }
   };
 
