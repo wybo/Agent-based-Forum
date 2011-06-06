@@ -3,11 +3,13 @@
     <title>Agent-based Forum</title>
     <meta http-equiv="Content-type" content="text/html;charset=UTF-8"></meta>
     <script src="jquery.js"></script> 
+    <script src="flot/jquery.flot.min.js"></script> 
     <script src="include.js"></script> 
     <script src="agent_based_forum.js"></script> 
-    <script>
+    <script type="text/javascript">
       $('document').ready(function() {
         forum = new Forum('#space');
+        forum.set_plot('#placeholder');
         var start_value = 'Start simulation';
         var pause_value = 'Pause simulation';
         $('#start').val(start_value);
@@ -34,6 +36,7 @@
     </script>
   </head>
   <body>
+    <div id="placeholder" style="width: 600px; height: 350px; float: right; margin-left: 2em;"></div>
     <h1>Agent-based Forum</h1>
     <h4>by Wybo Wiersma</h4>
     Agents posting on a forum, <a href="agent_based_forum.js.html">view source</a> <a href="trunk.tgz">(download)</a>, <a href="">available on Github</a>, <a href="http://www.gnu.org/licenses/agpl.html">A-GPL-ed</a>
@@ -47,12 +50,23 @@
         <li><i>Reset</i> returns it to the start condition</li>
       </ul>
       <p>
+        <select id="mode_select" onchange="forum.set_mode(this)">
+        </select>
+        <script type="text/javascript">
+          var modes = ["Random (no threads)", "Threads (flat threads)", "Subthreads (indented threads)"];
+          for (var i = 0; i < modes.length; i++) {
+            $('#mode_select').append(
+              '<option value="' + i + (ABF.DEFAULT_MODE == i ? " selected=\"selected\"" : "") + '">' + modes[i] + '</option>');
+          }
+        </script>
+        <input type="button" id="order" value="New threads first" /> 
+      </p>
+      <p>
         <input type="button" value="Next generation" onclick="forum.run();" />
         <input type="button" id="start" value="Start simulation" /> 
-        <input type="button" id="order" value="New threads first" /> 
         <input type="button" value="Reset" onclick="forum.reset();" />
       </p>
-      <canvas id="space" width="1600" height="2400">
+      <canvas id="space" width="1200" height="2400">
         <strong>Your browser does not support canvas.</strong>
       </canvas>
     </div>

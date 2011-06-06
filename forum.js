@@ -6,14 +6,19 @@ var Forum = (function() {
   var construct;
 
   construct = function(canvasId) {
+    this.direction = ABF.DEFAULT_DIRECTION;
+    this.mode = ABF.DEFAULT_MODE;
+    this.max_threads = ABF.MAX_THREADS;
     this.initCanvas(canvasId);
     this.reset();
   };
 
   construct.prototype.reset = function() {
-    this.direction = ABF.DEFAULT_DIRECTION;
-    this.mode = ABF.DEFAULT_MODE;
-    this.max_threads = ABF.MAX_THREADS;
+    if (this.mode == ABF.MODES.subthreaded) {
+      this.spacing = 80;
+    } else {
+      this.spacing = 30;
+    }
     this.restart();
   };
 
@@ -21,13 +26,18 @@ var Forum = (function() {
     var id,
         i,
         j,
-        position_hash;
+        position_hash,
+        init_array;
+
+    this.run_count = 0;
+    this.posts_count = 0;
+    this.posts_plot = [];
 
     this.post_id_counter = 0;
     this.thread_index_counter = 0;
     this.positions_hash = {};
     this.threads = [];
-    this.append_threads([
+    init_array = [
       [
         {indent: 0},
         {indent: 1},
@@ -95,7 +105,28 @@ var Forum = (function() {
       ], [ 
         {indent: 0},
         {indent: 1}
-      ]]);
+      ]];
+    if (this.mode == ABF.MODES.random) {
+      new_array = [[]];
+      for (i = 0; i < init_array.length; i++) {
+        for (j = 0; j < init_array[i].length; j++) {
+          if (init_array[i][j].indent !== 0) {
+            init_array[i][j].indent = null;
+            new_array[0].push(init_array[i][j]);
+          }
+        }
+      }
+      init_array = new_array;
+    } else if (this.mode == ABF.MODES.threaded) {
+      for (i = 0; i < init_array.length; i++) {
+        for (j = 0; j < init_array[i].length; j++) {
+          if (init_array[i][j].indent !== 0) {
+            init_array[i][j].indent = 1;
+          }
+        }
+      }
+    }
+    this.append_threads(init_array);
     
     this.actors = [
         new Actor({position: 1}, this),
@@ -109,23 +140,25 @@ var Forum = (function() {
     for (i = 0; i < 21; i++) {
       this.actors.push(new Actor({}, this));
     }
+    this.set_post_actors();
     this.draw();
   };
 
   construct.prototype.run = function() {
     for (i = 0; i < this.actors.length; i++) {
-      if (this.actors[i].position) {
-        position_hash = this.positions_hash[this.actors[i].position];
-        if (position_hash !== undefined) {
-          this.threads[position_hash.thread].posts[position_hash.post].actor = this.actors[i];
-        } else {
-          this.actors[i].go_offline(); // thread is gone
-        }
-      }
       this.actors[i].run();
     }
+    this.set_post_actors();
     this.draw();
+    this.plot();
+    this.run_count += 1;
   };
+
+  construct.prototype.set_mode = function(selector) {
+    var key = selector.selectedIndex;
+    this.mode = key;
+    this.reset();
+  }
 
   construct.prototype.toggleOrder = function() {
     if (this.direction == ABF.DIRECTIONS.oldnew) {
@@ -147,7 +180,7 @@ var Forum = (function() {
   };
 
   construct.prototype.append_threads = function(thread_arrays) {
-    for (var i = 1; i < thread_arrays.length; i++) {
+    for (var i = 0; i < thread_arrays.length; i++) {
       this.append_thread(thread_arrays[i]);
     }
   }
@@ -176,6 +209,19 @@ var Forum = (function() {
     return this.threads[insert_position];
   };
 
+  construct.prototype.set_post_actors = function() {
+    for (var i = 0; i < this.actors.length; i++) {
+      if (this.actors[i].position) {
+        position_hash = this.positions_hash[this.actors[i].position];
+        if (position_hash !== undefined) {
+          this.threads[position_hash.thread].posts[position_hash.post].actor = this.actors[i];
+        } else {
+          this.actors[i].go_offline(); // thread is gone
+        }
+      }
+    }
+  };
+
   construct.prototype.initCanvas = function(canvasId) {
     this.canvas = $(canvasId).get(0);
     this.context = this.canvas.getContext("2d");
@@ -195,5 +241,19 @@ var Forum = (function() {
     }
   };
 
+  construct.prototype.plot = function() {
+    this.posts_plot.push([this.run_count, this.posts_count]);
+    this.plotter.setData([this.posts_plot]);
+    this.plotter.setupGrid();
+    this.plotter.draw();
+  }
+
+  construct.prototype.set_plot = function(placeholder) {
+    var options = {
+        series: { shadowSize: 0 }, // drawing is faster without shadows
+        xaxis: { show: false }
+    };
+    this.plotter = $.plot($(placeholder), [this.posts_plot], options);
+  };
   return construct;
 }());

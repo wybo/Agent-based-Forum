@@ -40,7 +40,11 @@ var ForumThread = (function() {
   };
 
   construct.prototype.new_thread = function() {
-    return this.forum.append_thread();
+    if (this.forum.mode == ABF.MODES.random) {
+      return this;
+    } else {
+      return this.forum.append_thread();
+    }
   };
 
   construct.prototype.delete_posts = function() {
@@ -53,13 +57,30 @@ var ForumThread = (function() {
     var indent = 0,
         previous_indent = 0,
         indent_stack = [0],
-        spacing = ABF.SCL * 80,
+        spacing = ABF.SCL * this.forum.spacing,
         height_step = ABF.SCL * 20,
         width_step = ABF.SCL * 12,
         x_start = nr * (spacing + ABF.SCL * 10) + width_step,
         x = 0,
         y = 0,
-        context = this.forum.context;
+        context = this.forum.context,
+        i;
+    if (this.forum.mode == ABF.MODES.random) {
+      x = x_start;
+      y = 10;
+      for (i = 0; i < this.posts.length; i++) {
+        if (x > 800) {
+          x = x_start;
+          y = y + spacing;
+        }
+        x = x + spacing;
+        this.posts[i].draw(x, y);
+        if (this.posts[i].actor) {
+          this.posts[i].actor.draw(x, y);
+          this.posts[i].actor = null;
+        }
+      }
+    } else {
     if ((nr > 0) && (!ABF.NO_BARS)) {
       context.beginPath();
       context.strokeStyle = this.path_color(this.posts[0]);
@@ -77,7 +98,7 @@ var ForumThread = (function() {
     }
 
     squeeze_branch_i = -1;
-    for (var i = 1; i < this.posts.length; i++) {
+    for (i = 1; i < this.posts.length; i++) {
       indent = this.posts[i].indent;
       previous_indent = this.posts[i - 1].indent;
       x = x_start + (indent - 1) * width_step;
@@ -110,6 +131,7 @@ var ForumThread = (function() {
       context.closePath();
       this.posts[i].draw(x + width_step, y + height_step);
       indent_stack[indent] = y + height_step;
+    }
     }
   };
 

@@ -35,37 +35,54 @@ var Post = (function() {
     this.id = this.thread.forum.post_id_counter++;
     this.thread.forum.positions_hash[this.id] = 
         {thread: options.thread_index, post: options.index};
+    this.thread.forum.posts_count++;
+    return this;
   };
 
   construct.prototype.next = function() {
-    var position_hash = this.thread.forum.positions_hash[this.id];
-    if (position_hash.post + 1 < this.thread.posts.length) {
-      return this.thread.posts[position_hash.post + 1];
+    if (this.thread.forum.mode == ABF.MODES.random) {
+      var roll = Math.floor(Math.random() * (this.thread.posts.length));
+      return this.thread.posts[roll];
     } else {
-      return false;
+      var position_hash = this.thread.forum.positions_hash[this.id];
+      if (position_hash.post + 1 < this.thread.posts.length) {
+        return this.thread.posts[position_hash.post + 1];
+      } else {
+        return false;
+      }
     }
   };
 
   construct.prototype.reply = function() {
     var position_hash,
         insert_position = false,
+        insert_indent,
         i;
     position_hash = this.thread.forum.positions_hash[this.id];
     post = this.thread.posts[position_hash.post];
     // Find insert position
-    for (i = position_hash.post + 1; i < this.thread.posts.length; i++) {
-      if (insert_position === false) {
-        if (this.thread.posts[i].indent <= post.indent) {
-          insert_position = i;
+    if (this.thread.forum.mode != ABF.MODES.random) {
+      for (i = position_hash.post + 1; i < this.thread.posts.length; i++) {
+        if (insert_position === false) {
+          if (this.thread.posts[i].indent <= post.indent) {
+            insert_position = i;
+          }
         }
       }
     }
-    if (insert_position === false) {
+    if (insert_position === false) { // Random or found none
       insert_position = this.thread.posts.length;
     }
     // Insert reply at the given position
+    if (this.thread.forum.mode == ABF.MODES.threaded) {
+      insert_indent = 1;
+    } else if (this.thread.forum.mode == ABF.MODES.subthreaded) {
+      insert_indent = post.indent + 1;
+    } else {
+      insert_indent = null;
+    }
     this.thread.posts.splice(insert_position, 0,
-        new Post({indent: post.indent + 1, index: insert_position, 
+        new Post({indent: insert_indent, index: insert_position, 
             interest: post.topic,
             thread_index: position_hash.thread}, 
             post.thread));
