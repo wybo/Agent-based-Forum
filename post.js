@@ -7,23 +7,13 @@ var Post = (function() {
   
   construct = function(options, thread) {
     this.indent = options.indent;
-    /// Post topic attributes
     if (ABF.TOPICS) {
-      this.topic_actions = [];
-      for (var i = 0; i < ABF.TOPICS; i++) {
-        this.topic_actions.push({
-            chance: Math.pow(2, i),                                           
-            action: ABF.arg_returning_function(ABF.TOPICS - i - 1) });
-      }
-      this.topic_actions = ABF.prepare_actions(this.topic_actions);
-
-      if (options.interest) {
-        this.topic = ABF.random_action(this.topic_actions, {swap: options.interest});
+      if (options.topic) {
+        this.topic = options.topic;
       } else {
-        this.topic = ABF.random_action(this.topic_actions);
+        this.topic = ABF.random_action(ABF.TOPIC_ACTIONS);
       }
     }
-    ///
     if (options.color) {
       this.color = options.color;
     } else if (this.topic !== undefined) {
@@ -53,7 +43,7 @@ var Post = (function() {
     }
   };
 
-  construct.prototype.reply = function() {
+  construct.prototype.reply = function(topic) {
     var position_hash,
         insert_position = false,
         insert_indent,
@@ -83,7 +73,7 @@ var Post = (function() {
     }
     this.thread.posts.splice(insert_position, 0,
         new Post({indent: insert_indent, index: insert_position, 
-            interest: post.topic,
+            topic: topic,
             thread_index: position_hash.thread}, 
             post.thread));
     // Raise post_index for posts below

@@ -20,6 +20,8 @@ var ForumThread = (function() {
     } else {
       this.squeeze = false;
     }
+    this.forum.threads_count++;
+    return this;
   };
 
   construct.prototype.next = function() {
@@ -39,11 +41,11 @@ var ForumThread = (function() {
     }
   };
 
-  construct.prototype.new_thread = function() {
+  construct.prototype.new_thread = function(topic) {
     if (this.forum.mode == ABF.MODES.random) {
       return this;
     } else {
-      return this.forum.append_thread();
+      return this.forum.append_thread([{indent: 0, inserted: true, topic: topic}]);
     }
   };
 

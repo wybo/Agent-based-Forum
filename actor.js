@@ -8,10 +8,18 @@ var Actor = (function() {
   construct = function(options, forum) {
     // The global forum
     this.forum = forum;
+    /// Agent attributes
+    // Will be removed if true
+    this.left_forum = false;
     // The position, offline if false
     this.position = (options.position ? options.position : false);
-    /// Agent attributes
-    this.interest = Math.floor(Math.random() * (20 + 1));
+    this.next_desire = 0;
+    if (this.position) {
+      this.current_desire = 2 + Math.floor(Math.random() * (20 + 1));
+    } else {
+      this.current_desire = 2 + Math.floor(Math.random() * (25 + 1));
+    }
+    this.topic = ABF.random_action(ABF.TOPIC_ACTIONS);
     this.actions = [];
     this.actions.push({
         chance: 20,
@@ -24,24 +32,28 @@ var Actor = (function() {
         action: this.to_next_post
       });
     this.actions = ABF.prepare_actions(this.actions, {bind: this});
+    this.forum.users_count++;
+    return this;
     ///
   };
 
   /// Agent rate and objective functions
   construct.prototype.run = function() {
     if (this.position === false) { // is offline, rate function
-      var roll = Math.floor(Math.random()*1001);
-      if (this.interest > roll) { // if interest greater than roll
-        this.go_online();
+      if (this.current_desire < 2) {
+        this.leave_forum();
       } else {
-        this.interest = this.interest + 1; // regenerate interest
+        var roll = Math.floor(Math.random()*1001);
+        if (this.current_desire > roll) { // if desire greater than roll
+          this.go_online();
+        }
       }
     } else { // is visiting forum, objective function
       // this.own_post_bonus() could be added;
-      if (this.interest < 0) { // no interest left, leave
+      if (this.current_desire < 0) { // no desire left, leave
         this.go_offline();
       } else {
-        ABF.random_action(this.actions, {boost: [0, this.interest]});
+        ABF.random_action(this.actions, {boost: [0, this.current_desire]});
       }
     }
   };
@@ -54,7 +66,12 @@ var Actor = (function() {
     } else {
       this.to_next_thread();
     }
-    this.interest--; // lose interest / satisfy need to read
+    this.current_desire--; // lose desire / satisfy need to read
+    if (this.topic == post.topic) {
+      this.next_desire = this.next_desire + 1.5;
+    } else {
+      this.next_desire = this.next_desire + 0.7;
+    }
   };
 
   construct.prototype.to_next_thread = function() {
@@ -64,15 +81,17 @@ var Actor = (function() {
     } else {
       this.go_offline();
     }
+    this.current_desire = this.current_desire - 0.1; // wait for page-load
   };
 
   construct.prototype.to_reply = function() {
-    var post = this.post().reply();
+    var old_post = this.post();
+    var post = old_post.reply(ABF.random_action(ABF.TOPIC_ACTIONS, {swap: old_post.topic}));
     this.position = post.id;
   };
 
   construct.prototype.to_new_thread = function() {
-    var thread = this.post().thread.new_thread();
+    var thread = this.post().thread.new_thread(ABF.random_action(ABF.TOPIC_ACTIONS, {swap: this.topic}));
     this.position = thread.posts[0].id;
   };
 
@@ -82,7 +101,14 @@ var Actor = (function() {
   };
 
   construct.prototype.go_offline = function() {
+    this.current_desire = this.next_desire;
+    this.next_desire = 0;
     this.position = false;
+  };
+
+  construct.prototype.leave_forum = function() {
+    this.left_forum = true;
+    this.forum.users_count--;
   };
 
   construct.prototype.go_online = function() {
