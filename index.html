@@ -9,8 +9,8 @@
     <script src="application.js"></script> 
     <script type="text/javascript">
       $('document').ready(function() {
-        forum = new Forum('#space');
-        setup_forum(forum, '#plot_space', '#start', '#order');
+        forum = new Forum(ABF.DEFAULT_OPTIONS);
+        setup_forum_gui(forum, '#space', '#plot_space', '#start', '#order');
         setup_dropdown('#mode_select', ["Random (no threads)", "Threads (flat threads)", "Subthreads (indented)"], ABF.DEFAULT_MODE);
         setup_dropdown('#plot_select', ["Users over time", "Daily arrivals and leavers", "Posts over time", "Threads over time"], ABF.DEFAULT_PLOT);
       });
@@ -23,7 +23,13 @@
     </div>
     <h1>Agent-based Forum</h1>
     <h4>by Wybo Wiersma</h4>
-    Agents posting on a forum, <a href="agent_based_forum.js.html">view source</a> <a href="trunk.tgz">(download)</a>, <a href="">available on Github</a>, <a href="http://www.gnu.org/licenses/agpl.html">A-GPL-ed</a>
+    <p style="font-size: 0.8em;">
+      <a href="runs.html">View runs</a>,
+      <a href="http://www.gnu.org/licenses/agpl.html">A-GPL-ed</a>,
+      <a href="agent_based_forum.js.html">source</a>, 
+      <a href="trunk.tgz">(download)</a>,
+      <a href="https://github.com/wybo/Agent-based-Forum">Github</a>
+    </p>
     <div id="content">
       <h2>Usage</h2>
       <ul>
@@ -41,7 +47,7 @@
         <input type="button" value="Next generation" onclick="forum.run();" />
         <input type="button" value="Reset" onclick="forum.reset();" />
       </p>
-      <canvas id="space" width="1240" height="2400">
+      <canvas id="space" width="1600" height="1800">
         <strong>Your browser does not support canvas.</strong>
       </canvas>
     </div>

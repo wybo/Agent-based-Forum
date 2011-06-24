@@ -1,8 +1,8 @@
 #!/usr/bin/ruby
 require 'open-uri'
 
-if File.file?("publish_config.rb")
-  require 'publish_config.rb'
+if File.file?("config.rb")
+  require 'config.rb'
 else
   system "rm *.js.html"
 end

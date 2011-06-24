@@ -2,6 +2,8 @@
 //
 // Available under the Affero GPL v3, http://www.gnu.org/licenses/agpl.html
 
+var ABF = {};
+
 // Includes
 $.include('helpers.js');
 $.include('config.js');
@@ -9,7 +11,5 @@ $.include('post.js');
 $.include('forum_thread.js');
 $.include('actor.js');
 $.include('forum.js');
-
-var ABF = {};
 
 /// Important parts (excerpts)

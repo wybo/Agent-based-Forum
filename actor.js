@@ -8,21 +8,20 @@ var Actor = (function() {
   construct = function(options, forum) {
     // The global forum
     this.forum = forum;
+    this.id = this.forum.actors_id_counter++;
+    this.forum.users_count++;
     /// Agent attributes
     // Will be removed if true
     this.left_forum = false;
-    // The position, offline if false
+    // The position, false if offline
     this.position = (options.position ? options.position : false);
     this.next_desire = 0;
-    if (this.position) {
-      this.current_desire = 2 + Math.floor(Math.random() * (20 + 1));
-    } else {
-      this.current_desire = 2 + Math.floor(Math.random() * (25 + 1));
-    }
+    this.current_desire = 2 + Math.floor(Math.random() * (25 + 1));
+    this.reply_desire = 0;
     this.topic = ABF.random_action(ABF.TOPIC_ACTIONS);
     this.actions = [];
     this.actions.push({
-        chance: 20,
+        chance: 30,
         action: this.to_reply
       }, {
         chance: 2,
@@ -32,7 +31,7 @@ var Actor = (function() {
         action: this.to_next_post
       });
     this.actions = ABF.prepare_actions(this.actions, {bind: this});
-    this.forum.users_count++;
+    this.reading = true;
     return this;
     ///
   };
@@ -46,6 +45,7 @@ var Actor = (function() {
         var roll = Math.floor(Math.random()*1001);
         if (this.current_desire > roll) { // if desire greater than roll
           this.go_online();
+          this.read_post();
         }
       }
     } else { // is visiting forum, objective function
@@ -53,45 +53,88 @@ var Actor = (function() {
       if (this.current_desire < 0) { // no desire left, leave
         this.go_offline();
       } else {
-        ABF.random_action(this.actions, {boost: [0, this.current_desire]});
+        //ABF.random_action(this.actions, {boost: [0, this.current_desire + this.reply_desire]});
+        ABF.random_action(this.actions, {boost: [0, this.reply_desire]});
+        if (this.position) {
+          this.read_post();
+        }
+      }
+      if (this.reply_desire >= 30) {
+        this.reply_desire -= 30;
+      } else {
+        this.reply_desire = 0;
       }
     }
   };
   ///
+  
+  construct.prototype.read_post = function() {
+    var post = this.post();
+    if (post.indent === 0 || post.seen[this.id]) { // a thread or a seen post
+      this.current_desire = this.current_desire - 0.2; // lose desire / satisfy need to read
+      this.next_desire = this.next_desire + 0.1;
+      this.reading = false;
+    } else {
+      this.current_desire--; // lose desire / satisfy need to read
+      if (post.topic == this.topic) {
+//        this.next_desire = this.next_desire + 1.5;
+        this.next_desire = this.next_desire + 2.5;
+      } else {
+        this.next_desire = this.next_desire + 0.7;
+      }
+      post.seen[this.id] = true;
+      this.reading = true;
+    }
+    if (this.parent_post().author == this) {
+      this.reply_desire += 150;
+      this.current_desire += 10;
+    }
+  };
 
   construct.prototype.to_next_post = function() {
-    var post = this.post().next();
+    var old_post = this.post();
+    do {
+      // Passes by comments to uninteresting posts (for free)
+      if (old_post.topic == this.topic) {
+        post = old_post.next();
+      } else {
+        post = old_post.next(old_post.indent);
+      }
+      old_post = post;
+      // Passes posts that have been seen (for free), 
+      // unless commented below
+    } while (post && post.seen[this.id] && !post.posted_in[this.id]);
     if (post) {
       this.position = post.id;
     } else {
       this.to_next_thread();
     }
-    this.current_desire--; // lose desire / satisfy need to read
-    if (this.topic == post.topic) {
-      this.next_desire = this.next_desire + 1.5;
-    } else {
-      this.next_desire = this.next_desire + 0.7;
-    }
   };
 
   construct.prototype.to_next_thread = function() {
     var thread = this.post().thread.next();
+    // Free pass for threads that are uninteresting, or have been seen
+    while (thread && thread.posts[0].topic != this.topic) {
+//    while (thread && ((thread.posts[0].topic != this.topic) ||
+//        (thread.posts[0].seen[this.id] && !thread.posted_in[this.id]))) {
+      thread = thread.next();
+    }
     if (thread) {
       this.position = thread.posts[0].id;
     } else {
       this.go_offline();
     }
-    this.current_desire = this.current_desire - 0.1; // wait for page-load
   };
 
   construct.prototype.to_reply = function() {
     var old_post = this.post();
-    var post = old_post.reply(ABF.random_action(ABF.TOPIC_ACTIONS, {swap: old_post.topic}));
+    var post = old_post.reply(this, ABF.random_action(ABF.TOPIC_ACTIONS, {swap: old_post.topic}));
     this.position = post.id;
+    this.current_desire -= 5;
   };
 
   construct.prototype.to_new_thread = function() {
-    var thread = this.post().thread.new_thread(ABF.random_action(ABF.TOPIC_ACTIONS, {swap: this.topic}));
+    var thread = this.post().thread.new_thread(this, ABF.random_action(ABF.TOPIC_ACTIONS, {swap: this.topic}));
     this.position = thread.posts[0].id;
   };
 
@@ -100,8 +143,13 @@ var Actor = (function() {
     return this.forum.threads[position_hash.thread].posts[position_hash.post];
   };
 
+  construct.prototype.parent_post = function() {
+    var post = this.post();
+    return post.previous(post.indent - 1);
+  };
+
   construct.prototype.go_offline = function() {
-    this.current_desire = this.next_desire;
+    this.current_desire = this.next_desire; // Desire carries over
     this.next_desire = 0;
     this.position = false;
   };
@@ -121,13 +169,16 @@ var Actor = (function() {
 
   construct.prototype.draw = function(x, y) {
     var context = this.forum.context;
-    // head
     context.strokeStyle = "#F00";
     context.lineWidth = ABF.SCL;
+    if (this.reading) {
+    // head
     context.beginPath();
-    context.arc(x, y, ABF.SCL * 4, 0, Math.PI * 2, false);
-    context.closePath();
+//      context.rect(x - ABF.SCL * 4, y - ABF.SCL * 4, ABF.SCL * 8, ABF.SCL * 8, false);
+      context.arc(x, y, ABF.SCL * 4, 0, Math.PI * 2, false);
     context.stroke();
+    context.closePath();
+    }
     // body
     context.beginPath();
     context.moveTo(x + ABF.SCL * 1, y + ABF.SCL * 6);

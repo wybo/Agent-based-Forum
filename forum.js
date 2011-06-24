@@ -5,25 +5,29 @@
 var Forum = (function() {
   var construct;
 
-  construct = function(canvasId) {
-    this.direction = ABF.DEFAULT_DIRECTION;
-    this.mode = ABF.DEFAULT_MODE;
-    this.plot = ABF.DEFAULT_PLOT;
-    this.initCanvas(canvasId);
+  construct = function(options) {
+    this.set_options = options;
+    this.initial_actors = options.initial_actors;
+    this.direction = options.direction;
+    this.mode = options.mode;
+    this.max_threads = options.max_threads;
+    this.topics = options.topics;
+    this.daily_arrivals_fraction = options.daily_arrivals_fraction;
     this.reset();
   };
 
+  construct.prototype.initialize_display = function(space, plot_space) {
+    this.canvas = $(space).get(0);
+    this.context = this.canvas.getContext("2d");
+    this.plot_space = $(plot_space);
+    this.spacing = ABF.SPACING;
+    this.plot = ABF.SELECTED_PLOT;
+    this.replot();
+    this.draw();
+  };
+
   construct.prototype.reset = function() {
-    if (this.mode == ABF.MODES.subthreaded) {
-      this.spacing = 80;
-    } else {
-      this.spacing = 30;
-    }
-    this.max_threads = Math.floor(ABF.MAX_WIDTH / this.spacing);
     this.restart();
-    if (this.plot_space) {
-      this.replot();
-    }
   };
 
   construct.prototype.restart = function() {
@@ -31,13 +35,16 @@ var Forum = (function() {
         i,
         j,
         position_hash,
-        init_array;
+        init_array,
+        initial_offline_actors;
 
+    this.actors_id_counter = 0; // only goes up, only for id's
+    this.posts_id_counter = 0; // also for counting
     this.run_count = 0;
     this.users_count = 0;
+    this.daily_arrivals_remainder = 0;
     this.daily_arrivals_count = 0;
     this.daily_leavers_count = 0;
-    this.posts_count = 0;
     this.threads_count = 0;
 
     this.plot_users = [];
@@ -46,8 +53,6 @@ var Forum = (function() {
     this.plot_posts = [];
     this.plot_threads = [];
 
-    this.post_id_counter = 0;
-    this.thread_index_counter = 0;
     this.positions_hash = {};
     this.threads = [];
     init_array = [
@@ -150,11 +155,15 @@ var Forum = (function() {
         new Actor({position: 23}, this),
         new Actor({position: 11}, this)
       ];
-    for (i = 0; i < 243; i++) {
+    initial_offline_actors = this.initial_actors - this.actors.length;
+    for (i = 0; i < initial_offline_actors; i++) {
       this.actors.push(new Actor({}, this));
     }
     this.set_post_actors();
-    this.draw();
+    if (this.canvas) {
+      this.draw();
+      this.replot();
+    }
   };
 
   construct.prototype.run = function() {
@@ -173,8 +182,11 @@ var Forum = (function() {
     }
     this.prune_threads();
     this.set_post_actors();
-    this.draw();
-    this.draw_plot();
+    this.run_plot_data();
+    if (this.canvas) {
+      this.draw();
+      this.draw_plot();
+    }
     this.run_count += 1;
   };
 
@@ -223,24 +235,28 @@ var Forum = (function() {
   };
 
   construct.prototype.add_actors = function() {
-    this.daily_arrivals_count = Math.floor(this.actors.length * 0.05);
-    for (i = 0; i < this.daily_arrivals_count; i++) {
+    this.daily_arrivals_remainder = this.daily_arrivals_remainder + this.actors.length * this.daily_arrivals_fraction;
+    this.daily_arrivals_count = 0;
+    for (i = 0; i < this.daily_arrivals_remainder; i++) {
       this.actors.push(new Actor({}, this));
+      this.daily_arrivals_count++;
     }
+    this.daily_arrivals_remainder = this.daily_arrivals_remainder - this.daily_arrivals_count;
   };
 
   construct.prototype.prune_threads = function() {
     var nr_to_remove,
-        i;
+        i,
+        k;
     if (this.threads.length > this.max_threads) {
       nr_to_remove = this.threads.length - this.max_threads;
       for (i = 0; i < nr_to_remove; i++) {
         this.threads[i].delete_posts();
       }
       this.threads.splice(0, nr_to_remove);
-      for (i in this.positions_hash) {
-        if (this.positions_hash.hasOwnProperty(i)) {
-          this.positions_hash[i].thread = this.positions_hash[i].thread - nr_to_remove;
+      for (k in this.positions_hash) {
+        if (this.positions_hash.hasOwnProperty(k)) {
+          this.positions_hash[k].thread = this.positions_hash[k].thread - nr_to_remove;
         }
       }
     }
@@ -259,11 +275,6 @@ var Forum = (function() {
     }
   };
 
-  construct.prototype.initCanvas = function(canvasId) {
-    this.canvas = $(canvasId).get(0);
-    this.context = this.canvas.getContext("2d");
-  };
-
   construct.prototype.draw = function() {
     var position_hash;
     this.canvas.width = this.canvas.width;
@@ -278,29 +289,19 @@ var Forum = (function() {
     }
   };
 
-  construct.prototype.initialize_plot = function(plot_space) {
-    this.plot_space = $(plot_space);
-    this.replot();
-  };
-
   construct.prototype.replot = function() {
     var options = {
         series: { shadowSize: 0 }, // drawing is faster without shadows
         xaxis: { show: false }
     };
-    if (this.plot == ABF.PLOTS.users) {
-      this.plotter = $.plot(this.plot_space, [], options);
-    } else if (this.plot == ABF.PLOTS.posts) {
-      this.plotter = $.plot(this.plot_space, [], options);
-    } else if (this.plot == ABF.PLOTS.threads) {
-      this.plotter = $.plot(this.plot_space, [], options);
-    }
+    this.plotter = $.plot(this.plot_space, [], options);
+    this.run_plot_data();
     this.draw_plot();
   };
 
-  construct.prototype.draw_plot = function() {
+  construct.prototype.run_plot_data = function() {
+    this.plot_posts.push([this.run_count, this.posts_id_counter]);
     this.plot_users.push([this.run_count, this.users_count]);
-    this.plot_posts.push([this.run_count, this.posts_count]);
     this.plot_threads.push([this.run_count, this.threads_count]);
 
     if (this.run_count % 240 === 0) {
@@ -308,7 +309,9 @@ var Forum = (function() {
       this.plot_daily_leavers.push([this.run_count, this.daily_leavers_count]);
       this.daily_leavers_count = 0;
     }
+  };
 
+  construct.prototype.draw_plot = function() {
     if (this.plot == ABF.PLOTS.users) {
       this.plotter.setData([this.plot_users]);
     } else if (this.plot == ABF.PLOTS.arrivals_leavers) {
@@ -320,6 +323,17 @@ var Forum = (function() {
     }
     this.plotter.setupGrid();
     this.plotter.draw();
+  };
+
+  construct.prototype.plot_data = function() {
+    return {
+        config: this.set_options, 
+        data: {
+            posts: [this.plot_posts],
+            users: [this.plot_users],
+            threads: [this.plot_threads],
+            arrivals_leavers: [this.plot_daily_arrivals, this.plot_daily_leavers]
+        }};
   };
 
   return construct;

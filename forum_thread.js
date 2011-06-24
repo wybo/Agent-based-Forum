@@ -8,6 +8,7 @@ var ForumThread = (function() {
   construct = function(post_hashes, insert_position, forum, options) {
     var post_hash;
     this.forum = forum;
+    this.forum.threads_count++;
     this.posts = [];
     for (var i = 0; i < post_hashes.length; i++) {
       post_hash = post_hashes[i];
@@ -20,7 +21,6 @@ var ForumThread = (function() {
     } else {
       this.squeeze = false;
     }
-    this.forum.threads_count++;
     return this;
   };
 
@@ -41,11 +41,11 @@ var ForumThread = (function() {
     }
   };
 
-  construct.prototype.new_thread = function(topic) {
+  construct.prototype.new_thread = function(author, topic) {
     if (this.forum.mode == ABF.MODES.random) {
       return this;
     } else {
-      return this.forum.append_thread([{indent: 0, inserted: true, topic: topic}]);
+      return this.forum.append_thread([{indent: 0, inserted: true, author: author, topic: topic}]);
     }
   };
 
@@ -112,6 +112,7 @@ var ForumThread = (function() {
       } else {
         y = i * height_step;
       }
+      this.posts[i].draw(x + width_step, y + height_step);
       if (this.posts[i].actor) {
         this.posts[i].actor.draw(x + width_step, y + height_step);
         this.posts[i].actor = null;
@@ -131,7 +132,6 @@ var ForumThread = (function() {
       context.lineTo(x + ABF.SCL * 6, y + height_step);
       context.stroke();
       context.closePath();
-      this.posts[i].draw(x + width_step, y + height_step);
       indent_stack[indent] = y + height_step;
     }
     }
