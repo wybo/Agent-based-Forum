@@ -55,7 +55,7 @@ var Actor = (function() {
       } else {
         //ABF.random_action(this.actions, {boost: [0, this.current_desire + this.reply_desire]});
         ABF.random_action(this.actions, {boost: [0, this.reply_desire]});
-        if (this.position) {
+        if (this.position !== false) {
           this.read_post();
         }
       }

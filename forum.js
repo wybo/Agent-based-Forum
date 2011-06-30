@@ -247,24 +247,25 @@ var Forum = (function() {
   construct.prototype.prune_threads = function() {
     var nr_to_remove,
         i,
-        k;
+        property;
     if (this.threads.length > this.max_threads) {
       nr_to_remove = this.threads.length - this.max_threads;
       for (i = 0; i < nr_to_remove; i++) {
         this.threads[i].delete_posts();
       }
       this.threads.splice(0, nr_to_remove);
-      for (k in this.positions_hash) {
-        if (this.positions_hash.hasOwnProperty(k)) {
-          this.positions_hash[k].thread = this.positions_hash[k].thread - nr_to_remove;
+      for (property in this.positions_hash) {
+        if (this.positions_hash.hasOwnProperty(property)) {
+          this.positions_hash[property].thread = this.positions_hash[property].thread - nr_to_remove;
         }
       }
     }
   };
 
   construct.prototype.set_post_actors = function() {
+    var positions_hash;
     for (var i = 0; i < this.actors.length; i++) {
-      if (this.actors[i].position) {
+      if (this.actors[i].position !== false) {
         position_hash = this.positions_hash[this.actors[i].position];
         if (position_hash !== undefined) {
           this.threads[position_hash.thread].posts[position_hash.post].actor = this.actors[i];
