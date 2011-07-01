@@ -11,8 +11,9 @@
       $('document').ready(function() {
         forum = new Forum(ABF.DEFAULT_OPTIONS);
         setup_forum_gui(forum, '#space', '#plot_space', '#start', '#order');
-        setup_dropdown('#mode_select', ["Random (no threads)", "Threads (flat threads)", "Subthreads (indented)"], ABF.DEFAULT_MODE);
-        setup_dropdown('#plot_select', ["Users over time", "Daily arrivals and leavers", "Posts over time", "Threads over time"], ABF.DEFAULT_PLOT);
+        display_config('#config_space', forum.options);
+        setup_dropdown('#mode_select', ["Random (no threads)", "Threads (flat threads)", "Subthreads (indented)"], ABF.DEFAULT_OPTIONS.mode);
+        setup_dropdown('#plot_select', ["Users over time", "Daily arrivals and leavers", "Posts over time", "Threads over time"], ABF.SELECTED_PLOT);
       });
     </script>
   </head>
@@ -39,14 +40,13 @@
         <li><i>Reset</i> returns it to the start condition</li>
       </ul>
       <p>
-        <select id="mode_select" onchange="forum.set_mode(this)"></select>
+        <select id="mode_select" onchange="forum.set_mode(this); display_config('#config_space', forum.options)"></select>
         <input type="button" id="order" value="New threads first" /> 
-      </p>
-      <p>
         <input type="button" id="start" value="Start simulation" /> 
         <input type="button" value="Next generation" onclick="forum.run();" />
         <input type="button" value="Reset" onclick="forum.reset();" />
       </p>
+      <div id="config_space"></div>
       <canvas id="space" width="1600" height="1800">
         <strong>Your browser does not support canvas.</strong>
       </canvas>

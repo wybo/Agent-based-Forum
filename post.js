@@ -39,7 +39,7 @@ var Post = (function() {
     var roll,
         positions_hash,
         i;
-    if (this.thread.forum.mode == ABF.MODES.random) {
+    if (this.thread.forum.options.mode == ABF.MODES.random) {
       roll = Math.floor(Math.random() * (this.thread.posts.length));
       return this.thread.posts[roll];
     } else {
@@ -59,7 +59,7 @@ var Post = (function() {
   construct.prototype.previous = function(indent) {
     var positions_hash,
         i;
-    if (this.thread.forum.mode == ABF.MODES.random) {
+    if (this.thread.forum.options.mode == ABF.MODES.random) {
       return false;
     } else {
       position_hash = this.thread.forum.positions_hash[this.id];
@@ -84,7 +84,7 @@ var Post = (function() {
     position_hash = this.thread.forum.positions_hash[this.id];
     post = this.thread.posts[position_hash.post];
     // Find insert position
-    if (this.thread.forum.mode != ABF.MODES.random) {
+    if (this.thread.forum.options.mode != ABF.MODES.random) {
       for (i = position_hash.post + 1; i < this.thread.posts.length; i++) {
         if (insert_position === false) {
           if (this.thread.posts[i].indent <= post.indent) {
@@ -97,9 +97,9 @@ var Post = (function() {
       insert_position = this.thread.posts.length;
     }
     // Insert reply at the given position
-    if (this.thread.forum.mode == ABF.MODES.threaded) {
+    if (this.thread.forum.options.mode == ABF.MODES.threaded) {
       insert_indent = 1;
-    } else if (this.thread.forum.mode == ABF.MODES.subthreaded) {
+    } else if (this.thread.forum.options.mode == ABF.MODES.subthreaded) {
       insert_indent = post.indent + 1;
     } else {
       insert_indent = null;

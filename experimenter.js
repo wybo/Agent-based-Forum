@@ -2,11 +2,13 @@ $ = {};
 $.include = load;
 $.include('agent_based_forum.js');
 
-reruns = 20; // To average it out
+//reruns = 20; // To average it out
+reruns = 2; // To average it out
 
-generations = 9600;
+//generations = 9600;
+generations = 6;
 
-configurations = [
+tests = [
       {
         initial_actors: 50,
         mode: ABF.MODES.threaded,
@@ -51,18 +53,18 @@ configurations = [
 
 cycle_output = [];
 
-prepare_configurations = function(configurations) {
-  for (var c_i = 0; c_i < configurations.length; c_i++) {
+prepare_tests = function(tests) {
+  for (var c_i = 0; c_i < tests.length; c_i++) {
     for (var property in ABF.DEFAULT_OPTIONS) {
-      if (ABF.DEFAULT_OPTIONS.hasOwnProperty(property) && !configurations[c_i].hasOwnProperty(property)) {
-        configurations[c_i][property] = ABF.DEFAULT_OPTIONS[property];
+      if (ABF.DEFAULT_OPTIONS.hasOwnProperty(property) && !tests[c_i].hasOwnProperty(property)) {
+        tests[c_i][property] = ABF.DEFAULT_OPTIONS[property];
       }
     }
   }
-  return configurations;
+  return tests;
 }
 
-runner = function(options) {
+experimenter = function(options) {
   var forum,
       averaged_plot_hash = {data: {}},
       plot_hash,
@@ -100,10 +102,10 @@ runner = function(options) {
   cycle_output.push(averaged_plot_hash);
 };
 
-configurations = prepare_configurations(configurations);
+tests = prepare_tests(tests);
 
-for (var c_i = 0; c_i < configurations.length; c_i++) {
-  runner(configurations[c_i]);
+for (var c_i = 0; c_i < tests.length; c_i++) {
+  experimenter(tests[c_i]);
 }
 
 print(JSON.stringify(cycle_output));

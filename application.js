@@ -1,3 +1,5 @@
+experiment = [];
+
 setup_forum_gui = function(forum, space, plot_space, start, order) {
   forum.initialize_display(space, plot_space);
   var start_value = 'Start simulation';
@@ -24,14 +26,48 @@ setup_forum_gui = function(forum, space, plot_space, start, order) {
   });
 };
 
-plot_runs = function(runs) {
-  var i;
-  for(i = 0; i < runs.length; i++) {
-    plot_run(runs[i], i);
-  }
+display_config = function(config_space, config) {
+  _display_config($(config_space), config);
 }
 
-plot_run = function(run, index) {
+_display_config = function(div, config) {
+  div.html('<p>Mode: ' + config.mode + ', Initial actors: ' + config.initial_actors +
+      ', -threads: ' + config.initial_threads + ', Max threads: ' + config.max_threads + 
+      ', Daily arrivals fraction: ' + config.daily_arrivals_fraction + '</p>');
+};
+
+set_experiment = function(selector) {
+  var key = selector.selectedIndex;
+  fetch_and_plot_experiment(key);
+};
+
+// rather than $.getScript, to circumvent Chrome local origin issue
+fetch_and_plot_experiment = function(key) {
+  var old,
+      head,
+      script;
+  old = document.getElementById('uploadScript');  
+  if (old !== null) {  
+    old.parentNode.removeChild(old);  
+  } 
+  head = document.getElementsByTagName("head")[0]; 
+  script = document.createElement('script');
+  script.id = 'uploadScript';
+  script.type = 'text/javascript';
+  script.onload = plot_experiment; 
+  script.src = 'runs/' + experiments[key];
+  head.appendChild(script);  
+};
+
+plot_experiment = function() {
+  var i;
+  $("#content").html('');
+  for(i = 0; i < experiment.length; i++) {
+    plot_test(experiment[i], i);
+  }
+};
+
+plot_test = function(test, index) {
   var keys = [],
       k,
       div,
@@ -42,10 +78,9 @@ plot_run = function(run, index) {
       };
   div = $('<div>').css({'float' : 'left', 'clear' : 'left'});
   $("#content").append(div);
-  div.append('<p>Run: ' + index + ', Mode: ' + run.config.mode + 
-      ', Initial actors: ' + run.config.initial_actors + ', Max threads: ' + run.config.max_threads + '</p>');
-  for (k in run.data) {
-    if (run.data.hasOwnProperty(k)) {
+  _display_config(div, test.config);
+  for (k in test.data) {
+    if (test.data.hasOwnProperty(k)) {
       keys.push(k);
     }
   }
@@ -53,13 +88,13 @@ plot_run = function(run, index) {
   for (i = 0; i < keys.length; i++) {
     space = $('<div>').css({'width' : '300px', 'height' : '160px', 'float' : 'left', 'margin-right' : '0.7em', 'margin-bottom' : '1em'});
     div.append(space);
-    $.plot(space, run.data[keys[i]], options);
+    $.plot(space, test.data[keys[i]], options);
   }
 };
 
 setup_dropdown = function(option_select, options, default_option) {
   for (var i = 0; i < options.length; i++) {
     $(option_select).append(
-      '<option value="' + i + (default_option == i ? " selected=\"selected\"" : "") + '">' + options[i] + '</option>');
+      '<option value="' + i + '"' + (default_option == i ? ' selected="selected"' : '') + '>' + options[i] + '</option>');
   }
 };

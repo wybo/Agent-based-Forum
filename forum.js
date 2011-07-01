@@ -6,13 +6,7 @@ var Forum = (function() {
   var construct;
 
   construct = function(options) {
-    this.set_options = options;
-    this.initial_actors = options.initial_actors;
-    this.direction = options.direction;
-    this.mode = options.mode;
-    this.max_threads = options.max_threads;
-    this.topics = options.topics;
-    this.daily_arrivals_fraction = options.daily_arrivals_fraction;
+    this.options = options;
     this.reset();
   };
 
@@ -35,7 +29,8 @@ var Forum = (function() {
         i,
         j,
         position_hash,
-        init_array,
+        seed,
+        init_array = [],
         initial_offline_actors;
 
     this.actors_id_counter = 0; // only goes up, only for id's
@@ -55,76 +50,27 @@ var Forum = (function() {
 
     this.positions_hash = {};
     this.threads = [];
-    init_array = [
-      [
+    seed_thread = [
         {indent: 0},
         {indent: 1},
         {indent: 2},
         {indent: 2},
-        {indent: 1}
-      ], [ 
-        {indent: 0},
-        {indent: 1},
+        {indent: 2},
+        {indent: 3},
+        {indent: 3},
+        {indent: 3},
         {indent: 1},
         {indent: 2},
+        {indent: 2},
+        {indent: 2},
+        {indent: 3},
         {indent: 3},
         {indent: 3}
-      ], [ 
-        {indent: 0},
-        {indent: 1},
-        {indent: 2},
-        {indent: 2},
-        {indent: 3},
-        {indent: 4},
-        {indent: 3},
-        {indent: 3},
-        {indent: 2},
-        {indent: 1},
-        {indent: 1}
-      ], [
-        {indent: 0},
-        {indent: 1},
-        {indent: 2},
-        {indent: 2},
-        {indent: 1}
-      ], [ 
-        {indent: 0},
-        {indent: 1},
-        {indent: 1},
-        {indent: 2},
-        {indent: 1},
-        {indent: 2},
-        {indent: 2},
-        {indent: 3},
-        {indent: 3}
-      ], [ 
-        {indent: 0},
-        {indent: 1},
-        {indent: 2},
-        {indent: 2},
-        {indent: 3},
-        {indent: 4},
-        {indent: 3},
-        {indent: 3},
-        {indent: 2},
-        {indent: 1},
-        {indent: 1}
-      ], [
-        {indent: 0},
-        {indent: 1},
-        {indent: 2},
-        {indent: 2},
-        {indent: 1}
-      ], [ 
-        {indent: 0},
-        {indent: 1},
-        {indent: 1},
-        {indent: 2}
-      ], [ 
-        {indent: 0},
-        {indent: 1}
-      ]];
-    if (this.mode == ABF.MODES.random) {
+      ];
+    for (i = 0; i < this.options.initial_threads; i++) {
+      init_array.push(seed_thread);
+    }
+    if (this.options.mode == ABF.MODES.random) {
       new_array = [[]];
       for (i = 0; i < init_array.length; i++) {
         for (j = 0; j < init_array[i].length; j++) {
@@ -135,7 +81,7 @@ var Forum = (function() {
         }
       }
       init_array = new_array;
-    } else if (this.mode == ABF.MODES.threaded) {
+    } else if (this.options.mode == ABF.MODES.threaded) {
       for (i = 0; i < init_array.length; i++) {
         for (j = 0; j < init_array[i].length; j++) {
           if (init_array[i][j].indent !== 0) {
@@ -147,15 +93,9 @@ var Forum = (function() {
     this.append_threads(init_array);
     
     this.actors = [
-        new Actor({position: 1}, this),
-        new Actor({position: 8}, this),
-        new Actor({position: 40}, this),
-        new Actor({position: 44}, this),
-        new Actor({position: 37}, this),
-        new Actor({position: 23}, this),
-        new Actor({position: 11}, this)
+        new Actor({position: 1}, this)
       ];
-    initial_offline_actors = this.initial_actors - this.actors.length;
+    initial_offline_actors = this.options.initial_actors - this.actors.length;
     for (i = 0; i < initial_offline_actors; i++) {
       this.actors.push(new Actor({}, this));
     }
@@ -192,7 +132,7 @@ var Forum = (function() {
 
   construct.prototype.set_mode = function(selector) {
     var key = selector.selectedIndex;
-    this.mode = key;
+    this.options.mode = key;
     this.reset();
   };
 
@@ -203,10 +143,10 @@ var Forum = (function() {
   };
 
   construct.prototype.toggleOrder = function() {
-    if (this.direction == ABF.DIRECTIONS.oldnew) {
-      this.direction = ABF.DIRECTIONS.newold;
+    if (this.options.direction == ABF.DIRECTIONS.oldnew) {
+      this.options.direction = ABF.DIRECTIONS.newold;
     } else {
-      this.direction = ABF.DIRECTIONS.oldnew;
+      this.options.direction = ABF.DIRECTIONS.oldnew;
     }
     this.restart();
   };
@@ -235,7 +175,7 @@ var Forum = (function() {
   };
 
   construct.prototype.add_actors = function() {
-    this.daily_arrivals_remainder = this.daily_arrivals_remainder + this.actors.length * this.daily_arrivals_fraction;
+    this.daily_arrivals_remainder = this.daily_arrivals_remainder + this.actors.length * this.options.daily_arrivals_fraction;
     this.daily_arrivals_count = 0;
     for (i = 0; i < this.daily_arrivals_remainder; i++) {
       this.actors.push(new Actor({}, this));
@@ -248,8 +188,8 @@ var Forum = (function() {
     var nr_to_remove,
         i,
         property;
-    if (this.threads.length > this.max_threads) {
-      nr_to_remove = this.threads.length - this.max_threads;
+    if (this.threads.length > this.options.max_threads) {
+      nr_to_remove = this.threads.length - this.options.max_threads;
       for (i = 0; i < nr_to_remove; i++) {
         this.threads[i].delete_posts();
       }
@@ -279,7 +219,7 @@ var Forum = (function() {
   construct.prototype.draw = function() {
     var position_hash;
     this.canvas.width = this.canvas.width;
-    if (this.direction == ABF.DIRECTIONS.oldnew) {
+    if (this.options.direction == ABF.DIRECTIONS.oldnew) {
       for (i = 0; i < this.threads.length; i++) {
         this.threads[i].draw(i);
       }
@@ -291,11 +231,11 @@ var Forum = (function() {
   };
 
   construct.prototype.replot = function() {
-    var options = {
+    var plot_options = {
         series: { shadowSize: 0 }, // drawing is faster without shadows
         xaxis: { show: false }
     };
-    this.plotter = $.plot(this.plot_space, [], options);
+    this.plotter = $.plot(this.plot_space, [], plot_options);
     this.run_plot_data();
     this.draw_plot();
   };
@@ -328,7 +268,7 @@ var Forum = (function() {
 
   construct.prototype.plot_data = function() {
     return {
-        config: this.set_options, 
+        config: this.options, 
         data: {
             posts: [this.plot_posts],
             users: [this.plot_users],

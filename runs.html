@@ -6,10 +6,11 @@
     <script src="flot/jquery.flot.min.js"></script> 
     <script src="include.js"></script> 
     <script src="application.js"></script> 
-    <script src="runs/experiment.js"></script> 
+    <script src="runs/experiments.js"></script> 
     <script type="text/javascript">
       $('document').ready(function() {
-        plot_runs(runs);
+        setup_dropdown('#experiment_select', experiments, experiments.length - 1)
+        fetch_and_plot_experiment(experiments.length - 1);
       });
     </script>
   </head>
@@ -19,9 +20,8 @@
     <p style="font-size: 0.8em;">
       <a href="index.html">Back to model</a>
     </p>
-    <div id="content">
+    <select id="experiment_select" onchange="set_experiment(this)" style="margin-bottom: 0.5em;"></select>
+    <div id="content" style="width: 100%">
     </div>
-    Copyright: (c) 2011 Wybo Wiersma, Available under the 
-    <a href="http://www.gnu.org/licenses/agpl.html">Affero GPL, v3</a>
   </body>
 </html>

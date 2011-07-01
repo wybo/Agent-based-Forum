@@ -26,7 +26,7 @@ var ForumThread = (function() {
 
   construct.prototype.next = function() {
     var position_hash = this.forum.positions_hash[this.posts[0].id];
-    if (this.forum.direction == ABF.DIRECTIONS.oldnew) {
+    if (this.forum.options.direction == ABF.DIRECTIONS.oldnew) {
       if (position_hash.thread + 1 < this.forum.threads.length) {
         return this.forum.threads[position_hash.thread + 1];
       } else {
