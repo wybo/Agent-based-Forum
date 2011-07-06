@@ -8,3 +8,4 @@ PUBLISH_COMMAND = "rsync -a --delete --exclude '.git' . username@your-sever.com:
 #
 # Such as Chrome's V8, http://code.google.com/p/v8/
 JS_SHELL = "/home/username/v8/shell"
+JS_SHELL_OPTIONS = ""

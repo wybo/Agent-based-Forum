@@ -2,7 +2,7 @@
 //
 // Available under the Affero GPL v3, http://www.gnu.org/licenses/agpl.html
 
-var Forum = (function() {
+Forum = (function() {
   var construct;
 
   construct = function(options) {
@@ -37,16 +37,20 @@ var Forum = (function() {
     this.posts_id_counter = 0; // also for counting
     this.run_count = 0;
     this.users_count = 0;
+    this.daily_unique_posters_count = 0;
     this.daily_arrivals_remainder = 0;
     this.daily_arrivals_count = 0;
     this.daily_leavers_count = 0;
     this.threads_count = 0;
 
     this.plot_users = [];
+    this.plot_daily_unique_posters = [];
     this.plot_daily_arrivals = [];
     this.plot_daily_leavers = [];
     this.plot_posts = [];
     this.plot_threads = [];
+
+    this.daily_unique_posters_hash = [];
 
     this.positions_hash = {};
     this.threads = [];
@@ -91,6 +95,7 @@ var Forum = (function() {
       }
     }
     this.append_threads(init_array);
+    this.reset_daily_unique_posters();
     
     this.actors = [
         new Actor({position: 1}, this)
@@ -246,14 +251,18 @@ var Forum = (function() {
     this.plot_threads.push([this.run_count, this.threads_count]);
 
     if (this.run_count % 240 === 0) {
+      this.plot_daily_unique_posters.push([this.run_count, this.daily_unique_posters_count]);
       this.plot_daily_arrivals.push([this.run_count, this.daily_arrivals_count]);
       this.plot_daily_leavers.push([this.run_count, this.daily_leavers_count]);
       this.daily_leavers_count = 0;
+      this.reset_daily_unique_posters();
     }
   };
 
   construct.prototype.draw_plot = function() {
-    if (this.plot == ABF.PLOTS.users) {
+    if (this.plot == ABF.PLOTS.unique_posters) {
+      this.plotter.setData([this.plot_daily_unique_posters]);
+    } else if (this.plot == ABF.PLOTS.users) {
       this.plotter.setData([this.plot_users]);
     } else if (this.plot == ABF.PLOTS.arrivals_leavers) {
       this.plotter.setData([this.plot_daily_arrivals, this.plot_daily_leavers]);
@@ -270,11 +279,17 @@ var Forum = (function() {
     return {
         config: this.options, 
         data: {
-            posts: [this.plot_posts],
+            unique_posters: [this.plot_daily_unique_posters],
             users: [this.plot_users],
-            threads: [this.plot_threads],
-            arrivals_leavers: [this.plot_daily_arrivals, this.plot_daily_leavers]
+            arrivals_leavers: [this.plot_daily_arrivals, this.plot_daily_leavers],
+            posts: [this.plot_posts],
+            threads: [this.plot_threads]
         }};
+  };
+
+  construct.prototype.reset_daily_unique_posters = function() {
+    this.daily_unique_posters_count = 0;
+    this.daily_unique_posters_hash = {};
   };
 
   return construct;

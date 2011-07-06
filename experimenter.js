@@ -2,50 +2,27 @@ $ = {};
 $.include = load;
 $.include('agent_based_forum.js');
 
-//reruns = 20; // To average it out
-reruns = 2; // To average it out
+reruns = 20; // To average it out
+//reruns = 2; // To average it out
 
-//generations = 9600;
-generations = 6;
+generations = 9600;
+//generations = 6;
+
+initial_actor_settings = [50, 100, 200];
 
 tests = [
       {
-        initial_actors: 50,
+        initial_threads: 10,
+        mode: ABF.MODES.random,
+        daily_arrivals_fraction: 0.15
+      },
+      {
+        initial_threads: 10,
         mode: ABF.MODES.threaded,
         daily_arrivals_fraction: 0.15
       },
       {
-        initial_actors: 100,
-        mode: ABF.MODES.threaded,
-        daily_arrivals_fraction: 0.15
-      },
-      {
-        initial_actors: 200,
-        mode: ABF.MODES.threaded,
-        daily_arrivals_fraction: 0.15
-      },
-      {
-        initial_actors: 300,
-        mode: ABF.MODES.threaded,
-        daily_arrivals_fraction: 0.15
-      },
-      {
-        initial_actors: 50,
-        mode: ABF.MODES.subthreaded,
-        daily_arrivals_fraction: 0.15
-      },
-      {
-        initial_actors: 100,
-        mode: ABF.MODES.subthreaded,
-        daily_arrivals_fraction: 0.15
-      },
-      {
-        initial_actors: 200,
-        mode: ABF.MODES.subthreaded,
-        daily_arrivals_fraction: 0.15
-      },
-      {
-        initial_actors: 300,
+        initial_threads: 10,
         mode: ABF.MODES.subthreaded,
         daily_arrivals_fraction: 0.15
       }
@@ -53,16 +30,33 @@ tests = [
 
 cycle_output = [];
 
-prepare_tests = function(tests) {
-  for (var c_i = 0; c_i < tests.length; c_i++) {
-    for (var property in ABF.DEFAULT_OPTIONS) {
-      if (ABF.DEFAULT_OPTIONS.hasOwnProperty(property) && !tests[c_i].hasOwnProperty(property)) {
-        tests[c_i][property] = ABF.DEFAULT_OPTIONS[property];
+prepare_tests = function(tests, initial_actor_settings) {
+  var new_tests = [],
+      i,
+      j,
+      property,
+      n = 0;
+  for (i = 0; i < tests.length; i++) {
+    for (j = 0; j < initial_actor_settings.length; j++) {
+      new_tests[n] = {};
+      for (property in ABF.DEFAULT_OPTIONS) {
+        if (ABF.DEFAULT_OPTIONS.hasOwnProperty(property)) {
+          new_tests[n][property] = tests[i][property];
+        }
+      }
+      new_tests[n].initial_actors = initial_actor_settings[j];
+      n++;
+    }
+  }
+  for (i = 0; i < new_tests.length; i++) {
+    for (property in ABF.DEFAULT_OPTIONS) {
+      if (ABF.DEFAULT_OPTIONS.hasOwnProperty(property) && !new_tests[i].hasOwnProperty(property)) {
+        new_tests[i][property] = ABF.DEFAULT_OPTIONS[property];
       }
     }
   }
-  return tests;
-}
+  return new_tests;
+};
 
 experimenter = function(options) {
   var forum,
@@ -99,13 +93,16 @@ experimenter = function(options) {
       }
     }
   }
-  cycle_output.push(averaged_plot_hash);
+  print(JSON.stringify(averaged_plot_hash));
 };
 
-tests = prepare_tests(tests);
+tests = prepare_tests(tests, initial_actor_settings);
 
+print("[");
 for (var c_i = 0; c_i < tests.length; c_i++) {
   experimenter(tests[c_i]);
+  if (c_i < tests.length - 1) {
+    print(",");
+  }
 }
-
-print(JSON.stringify(cycle_output));
+print("]");

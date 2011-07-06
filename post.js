@@ -2,12 +2,16 @@
 //
 // Available under the Affero GPL v3, http://www.gnu.org/licenses/agpl.html
 
-var Post = (function() {
+Post = (function() {
   var construct;
   
   construct = function(options, thread) {
     this.thread = thread;
     this.id = this.thread.forum.posts_id_counter++;
+    if (!this.thread.forum.daily_unique_posters_hash[this.id]) {
+      this.thread.forum.daily_unique_posters_hash[this.id] = 1;
+      this.thread.forum.daily_unique_posters_count++;
+    }
     this.indent = options.indent;
     if (options.topic) {
       this.topic = options.topic;

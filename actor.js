@@ -2,7 +2,7 @@
 //
 // Available under the Affero GPL v3, http://www.gnu.org/licenses/agpl.html
 
-var Actor = (function() {
+Actor = (function() {
   var construct;
 
   construct = function(options, forum) {
@@ -59,7 +59,8 @@ var Actor = (function() {
           this.read_post();
         }
       }
-      if (this.reply_desire >= 30) {
+      // reduce reply desire with time
+      if (this.reply_desire >= 30) { // maybe TODO 5
         this.reply_desire -= 30;
       } else {
         this.reply_desire = 0;
@@ -117,6 +118,7 @@ var Actor = (function() {
     while (thread && thread.posts[0].topic != this.topic) {
 //    while (thread && ((thread.posts[0].topic != this.topic) ||
 //        (thread.posts[0].seen[this.id] && !thread.posted_in[this.id]))) {
+//        TODO
       thread = thread.next();
     }
     if (thread) {

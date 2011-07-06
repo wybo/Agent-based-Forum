@@ -1,9 +1,9 @@
 #!/usr/bin/ruby
 require 'config.rb'
 
-experiment = `#{JS_SHELL} experimenter.js`
+experiment = `#{JS_SHELL} experimenter.js #{JS_SHELL_OPTIONS}`
 
-experiment.chomp!
+experiment.gsub!("\n","")
 
 list = Dir.glob("runs/*")
 list.reject! {|f| f =~ /experiments/}

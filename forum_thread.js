@@ -2,7 +2,7 @@
 //
 // Available under the Affero GPL v3, http://www.gnu.org/licenses/agpl.html
 
-var ForumThread = (function() {
+ForumThread = (function() {
   var construct;
 
   construct = function(post_hashes, insert_position, forum, options) {

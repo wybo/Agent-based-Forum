@@ -68,7 +68,7 @@ plot_experiment = function() {
 };
 
 plot_test = function(test, index) {
-  var keys = [],
+  var keys = ["unique_posters", "users", "arrivals_leavers", "posts", "threads"],
       k,
       div,
       space,
@@ -79,12 +79,6 @@ plot_test = function(test, index) {
   div = $('<div>').css({'float' : 'left', 'clear' : 'left'});
   $("#content").append(div);
   _display_config(div, test.config);
-  for (k in test.data) {
-    if (test.data.hasOwnProperty(k)) {
-      keys.push(k);
-    }
-  }
-  keys = keys.sort().reverse();
   for (i = 0; i < keys.length; i++) {
     space = $('<div>').css({'width' : '300px', 'height' : '160px', 'float' : 'left', 'margin-right' : '0.7em', 'margin-bottom' : '1em'});
     div.append(space);

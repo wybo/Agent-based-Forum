@@ -13,7 +13,7 @@
         setup_forum_gui(forum, '#space', '#plot_space', '#start', '#order');
         display_config('#config_space', forum.options);
         setup_dropdown('#mode_select', ["Random (no threads)", "Threads (flat threads)", "Subthreads (indented)"], ABF.DEFAULT_OPTIONS.mode);
-        setup_dropdown('#plot_select', ["Users over time", "Daily arrivals and leavers", "Posts over time", "Threads over time"], ABF.SELECTED_PLOT);
+        setup_dropdown('#plot_select', ["Daily unique posters", "Users over time", "Daily arrivals and leavers", "Posts over time", "Threads over time"], ABF.SELECTED_PLOT);
       });
     </script>
   </head>
@@ -47,7 +47,7 @@
         <input type="button" value="Reset" onclick="forum.reset();" />
       </p>
       <div id="config_space"></div>
-      <canvas id="space" width="1600" height="1800">
+      <canvas id="space" width="3200" height="1800">
         <strong>Your browser does not support canvas.</strong>
       </canvas>
     </div>

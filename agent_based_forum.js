@@ -2,7 +2,7 @@
 //
 // Available under the Affero GPL v3, http://www.gnu.org/licenses/agpl.html
 
-var ABF = {};
+ABF = {};
 
 // Includes
 $.include('helpers.js');

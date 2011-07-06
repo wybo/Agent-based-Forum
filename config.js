@@ -5,11 +5,11 @@
 /// Settings
 ABF.DIRECTIONS = {oldnew: 0, newold: 1};
 ABF.MODES = {random: 0, threaded: 1, subthreaded: 2};
-ABF.PLOTS = {users: 0, arrivals_leavers: 1, posts: 2, threads: 3};
+ABF.PLOTS = {unique_posters: 0, users: 1, arrivals_leavers: 2, posts: 3, threads: 4};
 
 ABF.DEFAULT_OPTIONS = {};
 ABF.DEFAULT_OPTIONS.initial_actors = 100;
-ABF.DEFAULT_OPTIONS.initial_threads = 10; // Seed threads
+ABF.DEFAULT_OPTIONS.initial_threads = 40; // Seed threads
 ABF.DEFAULT_OPTIONS.direction = ABF.DIRECTIONS.newold; // new threads shown first
 ABF.DEFAULT_OPTIONS.mode = ABF.MODES.subthreaded;
 ABF.DEFAULT_OPTIONS.max_threads = 40; // threads dropped after this
