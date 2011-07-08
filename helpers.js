@@ -111,6 +111,10 @@ ABF.topic_colors = function(topics) {
   return topic_colors;
 };
 
+ABF.sort_by_rating = function(a, b) {
+  return b[0].rating - a[0].rating;
+};
+
 // Randomization / normal distributions
 
 function rnd_bmt() {

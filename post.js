@@ -32,6 +32,9 @@ Post = (function() {
     }
     this.thread.forum.positions_hash[this.id] = 
         {thread: options.thread_index, post: options.index};
+    if (this.thread.forum.options.mode == ABF.MODES.ordered) {
+      this.rating = 0;
+    }
     this.seen = {};
     this.seen[this.author_id] = true;
     this.posted_in = {};
@@ -43,40 +46,31 @@ Post = (function() {
     var roll,
         positions_hash,
         i;
-    if (this.thread.forum.options.mode == ABF.MODES.random) {
-      roll = Math.floor(Math.random() * (this.thread.posts.length));
-      return this.thread.posts[roll];
-    } else {
-      position_hash = this.thread.forum.positions_hash[this.id];
-      if (indent === undefined) {
-        indent = this.indent + 1;
-      }
-      for (i = position_hash.post + 1; i < this.thread.posts.length; i++) {
-        if (this.thread.posts[i].indent <= indent) {
-          return this.thread.posts[i];
-        }
-      }
-      return false;
+    position_hash = this.thread.forum.positions_hash[this.id];
+    if (indent === undefined) {
+      indent = this.indent + 1;
     }
+    for (i = position_hash.post + 1; i < this.thread.posts.length; i++) {
+      if (this.thread.posts[i].indent <= indent) {
+        return this.thread.posts[i];
+      }
+    }
+    return false;
   };
 
   construct.prototype.previous = function(indent) {
     var positions_hash,
         i;
-    if (this.thread.forum.options.mode == ABF.MODES.random) {
-      return false;
-    } else {
-      position_hash = this.thread.forum.positions_hash[this.id];
-      if (indent === undefined) {
-        indent = this.indent;
-      }
-      for (i = position_hash.post - 1; i > 0; i--) {
-        if (this.thread.posts[i].indent >= indent) {
-          return this.thread.posts[i];
-        }
-      }
-      return false;
+    position_hash = this.thread.forum.positions_hash[this.id];
+    if (indent === undefined) {
+      indent = this.indent;
     }
+    for (i = position_hash.post - 1; i > 0; i--) {
+      if (this.thread.posts[i].indent >= indent) {
+        return this.thread.posts[i];
+      }
+    }
+    return false;
   };
 
   construct.prototype.reply = function(author, topic) {
@@ -88,12 +82,10 @@ Post = (function() {
     position_hash = this.thread.forum.positions_hash[this.id];
     post = this.thread.posts[position_hash.post];
     // Find insert position
-    if (this.thread.forum.options.mode != ABF.MODES.random) {
-      for (i = position_hash.post + 1; i < this.thread.posts.length; i++) {
-        if (insert_position === false) {
-          if (this.thread.posts[i].indent <= post.indent) {
-            insert_position = i;
-          }
+    for (i = position_hash.post + 1; i < this.thread.posts.length; i++) {
+      if (insert_position === false) {
+        if (this.thread.posts[i].indent <= post.indent) {
+          insert_position = i;
         }
       }
     }

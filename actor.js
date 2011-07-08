@@ -20,16 +20,26 @@ Actor = (function() {
     this.reply_desire = 0;
     this.topic = ABF.random_action(ABF.TOPIC_ACTIONS);
     this.actions = [];
-    this.actions.push({
-        chance: 30,
-        action: this.to_reply
-      }, {
-        chance: 2,
-        action: this.to_new_thread
-      }, {
-        total: 1000,
-        action: this.to_next_post
-      });
+    if (this.forum.options.mode != ABF.MODES.random) {
+      this.actions.push({
+          chance: this.forum.options.reply_chance,
+          action: this.to_reply
+        }, {
+          chance: this.forum.options.new_thread_chance,
+          action: this.to_new_thread
+        }, {
+          total: 1000,
+          action: this.to_next_post
+        });
+    } else {
+      this.actions.push({
+          chance: this.forum.options.reply_chance + this.forum.options.new_thread_chance,
+          action: this.to_new_thread
+        }, {
+          total: 1000,
+          action: this.to_next_thread
+        });
+    }
     this.actions = ABF.prepare_actions(this.actions, {bind: this});
     this.reading = true;
     return this;
@@ -70,9 +80,10 @@ Actor = (function() {
   ///
   
   construct.prototype.read_post = function() {
-    var post = this.post();
-    if (post.indent === 0 || post.seen[this.id]) { // a thread or a seen post
-      this.current_desire = this.current_desire - 0.2; // lose desire / satisfy need to read
+    var post = this.post(),
+        parent_post = post.previous(post.indent - 1);
+    if ((this.forum.options.mode != ABF.MODES.random && post.indent === 0) || post.seen[this.id]) { // a thread or a seen post
+      this.current_desire = this.current_desire - 0.2; // lose desire
       this.next_desire = this.next_desire + 0.1;
       this.reading = false;
     } else {
@@ -80,13 +91,16 @@ Actor = (function() {
       if (post.topic == this.topic) {
 //        this.next_desire = this.next_desire + 1.5;
         this.next_desire = this.next_desire + 2.5;
+        if (this.forum.options.mode == ABF.MODES.ordered) {
+          post.rating += 1;
+        }
       } else {
         this.next_desire = this.next_desire + 0.7;
       }
       post.seen[this.id] = true;
       this.reading = true;
     }
-    if (this.parent_post().author == this) {
+    if (parent_post && parent_post.author == this) {
       this.reply_desire += 150;
       this.current_desire += 10;
     }
@@ -138,16 +152,12 @@ Actor = (function() {
   construct.prototype.to_new_thread = function() {
     var thread = this.post().thread.new_thread(this, ABF.random_action(ABF.TOPIC_ACTIONS, {swap: this.topic}));
     this.position = thread.posts[0].id;
+    this.current_desire -= 5;
   };
 
   construct.prototype.post = function() {
     var position_hash = this.forum.positions_hash[this.position];
     return this.forum.threads[position_hash.thread].posts[position_hash.post];
-  };
-
-  construct.prototype.parent_post = function() {
-    var post = this.post();
-    return post.previous(post.indent - 1);
   };
 
   construct.prototype.go_offline = function() {

@@ -75,13 +75,11 @@ Forum = (function() {
       init_array.push(seed_thread);
     }
     if (this.options.mode == ABF.MODES.random) {
-      new_array = [[]];
+      new_array = [];
       for (i = 0; i < init_array.length; i++) {
         for (j = 0; j < init_array[i].length; j++) {
-          if (init_array[i][j].indent !== 0) {
-            init_array[i][j].indent = null;
-            new_array[0].push(init_array[i][j]);
-          }
+          init_array[i][j].indent = 0;
+          new_array.push([init_array[i][j]]);
         }
       }
       init_array = new_array;
@@ -125,7 +123,12 @@ Forum = (function() {
         i--;
       }
     }
-    this.prune_threads();
+    if (this.options.mode != ABF.MODES.random) {
+      this.prune_threads();
+    }
+    if (this.options.mode == ABF.MODES.ordered) {
+      this.reorder_threads();
+    }
     this.set_post_actors();
     this.run_plot_data();
     if (this.canvas) {
@@ -136,8 +139,12 @@ Forum = (function() {
   };
 
   construct.prototype.set_mode = function(selector) {
-    var key = selector.selectedIndex;
+    var key = selector.selectedIndex,
+        previous_mode = this.options.mode;
     this.options.mode = key;
+    if (previous_mode != this.options.mode && (previous_mode == ABF.MODES.random || this.options.mode == ABF.MODES.random)) {
+      this.toggleOrder();
+    }
     this.reset();
   };
 
@@ -204,6 +211,12 @@ Forum = (function() {
           this.positions_hash[property].thread = this.positions_hash[property].thread - nr_to_remove;
         }
       }
+    }
+  };
+
+  construct.prototype.reorder_threads = function() {
+    for (i = 0; i < this.threads.length; i++) {
+      this.threads[i].reorder_posts();
     }
   };
 

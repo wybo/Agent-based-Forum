@@ -12,7 +12,7 @@
         forum = new Forum(ABF.DEFAULT_OPTIONS);
         setup_forum_gui(forum, '#space', '#plot_space', '#start', '#order');
         display_config('#config_space', forum.options);
-        setup_dropdown('#mode_select', ["Random (no threads)", "Threads (flat threads)", "Subthreads (indented)"], ABF.DEFAULT_OPTIONS.mode);
+        setup_dropdown('#mode_select', ["Random (no threads)", "Threads (flat threads)", "Subthreads (indented)", "Ratings and subthreads (ordered)"], ABF.DEFAULT_OPTIONS.mode);
         setup_dropdown('#plot_select', ["Daily unique posters", "Users over time", "Daily arrivals and leavers", "Posts over time", "Threads over time"], ABF.SELECTED_PLOT);
       });
     </script>
