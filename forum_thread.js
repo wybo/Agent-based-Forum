@@ -55,33 +55,63 @@ ForumThread = (function() {
   };
 
   construct.prototype.reorder_posts = function(start, end, new_posts) {
-    var new_posts = [],
-        indent_pointer = 1,
-        done_counter = 1,
-        below_counter,
-        new_pointer = start,
-        sort_list,
+    var sorted_arrays,
+        sorted_posts,
         i;
-    while (done_counter < this.posts.size) {
-      sort_list = [];
-      below_counter = 0;
-      for (i = this.posts.size - 1; i > 0; i--) {
-        if (this.posts[i].indent == indent_pointer) {
-          sort_list.push([this.posts[i], below_counter]);
-          below_counter = 0;
-          done_counter += 1;
-        } else {
-          below_counter++;
-        }
-      }
-      sort_list.sort(ABF.sort_by_rating);
-      for (i = 0; i < sort_list.size; i++) {
-        this.reorder_posts(new_pointer, new_pointer + sort_list[i][1], new_posts);
-        new_pointer += sort_list[i][0];
-      }
+    sorted_arrays = this.add_to_nested_sorted_arrays(1, 1, this.posts);
+    sorted_posts = this.peel_from_nested_arrays(sorted_arrays);
+    sorted_posts.splice(0, 0, this.posts[0]);
+    this.posts = sorted_posts;
+    for (i = 1; i < this.posts.length; i++) {
+      this.forum.positions_hash[this.posts[i].id].post = i;
     }
   };
 
+  construct.prototype.add_to_nested_sorted_arrays = function(previous_i_p, index, posts) {
+    var p_i_p = previous_i_p,
+        nested_arrays = [],
+        i = index,
+        post;
+    while (i < posts.length) {
+      post = posts[i];
+      if (post.indent > p_i_p) {
+        nested_arrays.push(this.add_to_nested_sorted_arrays(post.indent, i, posts));
+      } else if (post.indent == p_i_p) {
+        nested_arrays.push([post.rating, 1, post]);
+      } else {
+        return this.pack_nested_array(nested_arrays);
+      }
+      i += nested_arrays[nested_arrays.length - 1][1];
+    }
+    return this.pack_nested_array(nested_arrays);
+  };
+
+  construct.prototype.pack_nested_array = function(nested_arrays) {
+    var i_counter = 0,
+        j;
+    nested_arrays.sort(ABF.sort_by_rating);
+    for (j = 0; j < nested_arrays.length; j++) {
+      i_counter += nested_arrays[j][1];
+    }
+    if (nested_arrays.length > 0) {
+      nested_arrays = [nested_arrays[0][0], i_counter].concat(nested_arrays);
+    }
+    return nested_arrays;
+  };
+
+  construct.prototype.peel_from_nested_arrays = function(sorted_arrays) {
+    var sorted_list = [],
+        i;
+    for (i = 0; i < sorted_arrays.length; i++) {
+      if (sorted_arrays[i] instanceof Array) {
+        sorted_list = sorted_list.concat(this.peel_from_nested_arrays(sorted_arrays[i]));
+      } else if (sorted_arrays[i] instanceof Object) {
+        sorted_list.push(sorted_arrays[i]);
+      } // drop if int = rating / other sorter
+    }
+    return sorted_list;
+  };
+  
   construct.prototype.draw = function(nr) {
     var indent = 0,
         previous_indent = 0,

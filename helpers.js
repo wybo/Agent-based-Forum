@@ -112,7 +112,7 @@ ABF.topic_colors = function(topics) {
 };
 
 ABF.sort_by_rating = function(a, b) {
-  return b[0].rating - a[0].rating;
+  return b[0] - a[0];
 };
 
 // Randomization / normal distributions
@@ -124,11 +124,10 @@ function rnd_bmt() {
     // If the radius is zero or greater than 1, throw them out and pick two new ones
     // Rejection sampling throws away about 20% of the pairs.
     do {
-    x = Math.random()*2-1;
-    y = Math.random()*2-1;
-    rds = x*x + y*y;
-    }
-    while (rds == 0 || rds > 1)
+      x = Math.random()*2-1;
+      y = Math.random()*2-1;
+      rds = x*x + y*y;
+    } while (rds === 0 || rds > 1);
 
     // This magic is the Box-Muller Transform
     c = Math.sqrt(-2*Math.log(rds)/rds);

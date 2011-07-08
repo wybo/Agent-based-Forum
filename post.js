@@ -95,7 +95,7 @@ Post = (function() {
     // Insert reply at the given position
     if (this.thread.forum.options.mode == ABF.MODES.threaded) {
       insert_indent = 1;
-    } else if (this.thread.forum.options.mode == ABF.MODES.subthreaded) {
+    } else if (this.thread.forum.options.mode == ABF.MODES.subthreaded || this.thread.forum.options.mode == ABF.MODES.ordered) {
       insert_indent = post.indent + 1;
     } else {
       insert_indent = null;
