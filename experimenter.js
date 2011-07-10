@@ -10,27 +10,26 @@ generations = 9600;
 
 initial_actor_settings = [50, 100, 200];
 
+note = "No entering of (sub)threads if not users topic"
+
 tests = [
       {
-        initial_threads: 10,
-        mode: ABF.MODES.random,
-        daily_arrivals_fraction: 0.15
+        mode: ABF.MODES.random
       },
       {
-        initial_threads: 10,
-        mode: ABF.MODES.threaded,
-        daily_arrivals_fraction: 0.15
+        mode: ABF.MODES.threaded
       },
       {
-        initial_threads: 10,
-        mode: ABF.MODES.subthreaded,
-        daily_arrivals_fraction: 0.15
+        mode: ABF.MODES.subthreaded
+      },
+      {
+        mode: ABF.MODES.ordered
       }
     ];
 
 cycle_output = [];
 
-prepare_tests = function(tests, initial_actor_settings) {
+prepare_tests = function(tests, initial_actor_settings, note) {
   var new_tests = [],
       i,
       j,
@@ -39,12 +38,13 @@ prepare_tests = function(tests, initial_actor_settings) {
   for (i = 0; i < tests.length; i++) {
     for (j = 0; j < initial_actor_settings.length; j++) {
       new_tests[n] = {};
-      for (property in ABF.DEFAULT_OPTIONS) {
-        if (ABF.DEFAULT_OPTIONS.hasOwnProperty(property)) {
+      for (property in tests[i]) {
+        if (tests[i].hasOwnProperty(property)) {
           new_tests[n][property] = tests[i][property];
         }
       }
       new_tests[n].initial_actors = initial_actor_settings[j];
+      new_tests[n].note = note;
       n++;
     }
   }
@@ -96,7 +96,7 @@ experimenter = function(options) {
   print(JSON.stringify(averaged_plot_hash));
 };
 
-tests = prepare_tests(tests, initial_actor_settings);
+tests = prepare_tests(tests, initial_actor_settings, note);
 
 print("[");
 for (var c_i = 0; c_i < tests.length; c_i++) {

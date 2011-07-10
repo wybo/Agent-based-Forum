@@ -28,8 +28,7 @@ Forum = (function() {
     var id,
         i,
         j,
-        position_hash,
-        seed,
+        seed_thread,
         init_array = [],
         initial_offline_actors;
 
@@ -111,6 +110,7 @@ Forum = (function() {
 
   construct.prototype.run = function() {
     var new_visitors,
+        changed_positions = false,
         i;
     if (this.run_count > 1 && this.run_count % 240 === 0) {
       this.add_actors();
@@ -125,9 +125,14 @@ Forum = (function() {
     }
     if (this.options.mode != ABF.MODES.random) {
       this.prune_threads();
+      changed_positions = true;
     }
     if (this.options.mode == ABF.MODES.ordered) {
       this.reorder_threads();
+      changed_positions = true;
+    }
+    if (changed_positions) {
+      this.redo_positions_hash();
     }
     this.set_post_actors();
     this.run_plot_data();
@@ -206,22 +211,33 @@ Forum = (function() {
         this.threads[i].delete_posts();
       }
       this.threads.splice(0, nr_to_remove);
-      for (property in this.positions_hash) {
-        if (this.positions_hash.hasOwnProperty(property)) {
-          this.positions_hash[property].thread = this.positions_hash[property].thread - nr_to_remove;
-        }
-      }
+      // runs redo_positions_hash later
     }
   };
 
   construct.prototype.reorder_threads = function() {
     for (i = 0; i < this.threads.length; i++) {
+      this.threads[i].reweight_thread_and_posts(this.run_count);
       this.threads[i].reorder_posts();
+    }
+    this.threads.sort(ABF.sort_by_first_posts_weight);
+    // runs redo_positions_hash later
+  };
+
+  construct.prototype.redo_positions_hash = function() {
+    var i,
+        j;
+    for (i = 0; i < this.threads.length; i++) {
+      for (j = 0; j < this.threads[i].posts.length; j++) {
+        position_hash = this.positions_hash[this.threads[i].posts[j].id];
+        position_hash.thread = i;
+        position_hash.post = j;
+      }
     }
   };
 
   construct.prototype.set_post_actors = function() {
-    var positions_hash;
+    var position_hash;
     for (var i = 0; i < this.actors.length; i++) {
       if (this.actors[i].position !== false) {
         position_hash = this.positions_hash[this.actors[i].position];

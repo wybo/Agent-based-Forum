@@ -54,46 +54,55 @@ ForumThread = (function() {
     }
   };
 
+  construct.prototype.reweight_thread_and_posts = function(current_time) {
+    var i,
+        post;
+    for (i = 0; i < this.posts.length; i++) {
+      post = this.posts[i];
+      post.weight = ABF.hn_weight(post.rating, current_time - post.time);
+    }
+  };
+
   construct.prototype.reorder_posts = function(start, end, new_posts) {
-    var sorted_arrays,
+    var nested_arrays,
         sorted_posts,
         i;
-    sorted_arrays = this.add_to_nested_sorted_arrays(1, 1, this.posts);
-    sorted_posts = this.peel_from_nested_arrays(sorted_arrays);
-    sorted_posts.splice(0, 0, this.posts[0]);
+    nested_arrays = this.add_to_nested_sorted_arrays(0, 0, this.posts);
+    sorted_posts = this.peel_from_nested_arrays(nested_arrays);
     this.posts = sorted_posts;
-    for (i = 1; i < this.posts.length; i++) {
+    for (i = 0; i < this.posts.length; i++) {
       this.forum.positions_hash[this.posts[i].id].post = i;
     }
   };
 
-  construct.prototype.add_to_nested_sorted_arrays = function(previous_i_p, index, posts) {
-    var p_i_p = previous_i_p,
-        nested_arrays = [],
+  construct.prototype.add_to_nested_sorted_arrays = function(previous_indent, index, posts) {
+    var nested_arrays = [],
         i = index,
         post;
     while (i < posts.length) {
       post = posts[i];
-      if (post.indent > p_i_p) {
-        nested_arrays.push(this.add_to_nested_sorted_arrays(post.indent, i, posts));
-      } else if (post.indent == p_i_p) {
-        nested_arrays.push([post.rating, 1, post]);
+      next_post = posts[i + 1];
+      if (next_post && next_post.indent > previous_indent) {
+        nested_arrays.push(this.pack_nested_array([[post.rating, 1, post], this.add_to_nested_sorted_arrays(next_post.indent, i + 1, posts)]));
+      } else if (post.indent === previous_indent) {
+        nested_arrays.push([post.weight, 1, post]);
       } else {
+        nested_arrays.sort(ABF.sort_by_first_element);
         return this.pack_nested_array(nested_arrays);
       }
       i += nested_arrays[nested_arrays.length - 1][1];
     }
+    nested_arrays.sort(ABF.sort_by_first_element);
     return this.pack_nested_array(nested_arrays);
   };
 
   construct.prototype.pack_nested_array = function(nested_arrays) {
     var i_counter = 0,
         j;
-    nested_arrays.sort(ABF.sort_by_rating);
-    for (j = 0; j < nested_arrays.length; j++) {
-      i_counter += nested_arrays[j][1];
-    }
     if (nested_arrays.length > 0) {
+      for (j = 0; j < nested_arrays.length; j++) {
+        i_counter += nested_arrays[j][1];
+      }
       nested_arrays = [nested_arrays[0][0], i_counter].concat(nested_arrays);
     }
     return nested_arrays;
@@ -111,7 +120,7 @@ ForumThread = (function() {
     }
     return sorted_list;
   };
-  
+
   construct.prototype.draw = function(nr) {
     var indent = 0,
         previous_indent = 0,

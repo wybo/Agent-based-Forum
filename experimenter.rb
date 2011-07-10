@@ -8,6 +8,7 @@ experiment.gsub!("\n","")
 list = Dir.glob("runs/*")
 list.reject! {|f| f =~ /experiments/}
 list.each {|f| f.gsub!(/runs\//, "")}
+list.sort!
 
 new_experiment_file = "experiment." + Time.now.to_i.to_s + ".nr-" + (list.size + 1).to_s + ".js"
 open("runs/" + new_experiment_file, "w") { |file|

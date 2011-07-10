@@ -25,6 +25,9 @@ Actor = (function() {
           chance: this.forum.options.reply_chance,
           action: this.to_reply
         }, {
+          chance: this.forum.options.next_thread_chance,
+          action: this.to_next_thread
+        }, {
           chance: this.forum.options.new_thread_chance,
           action: this.to_new_thread
         }, {
@@ -42,6 +45,7 @@ Actor = (function() {
     }
     this.actions = ABF.prepare_actions(this.actions, {bind: this});
     this.reading = true;
+    this.seen_boring_posts = 0;
     return this;
     ///
   };
@@ -55,7 +59,7 @@ Actor = (function() {
         var roll = Math.floor(Math.random()*1001);
         if (this.current_desire > roll) { // if desire greater than roll
           this.go_online();
-          this.read_post();
+          this.read_current_post();
         }
       }
     } else { // is visiting forum, objective function
@@ -64,14 +68,15 @@ Actor = (function() {
         this.go_offline();
       } else {
         //ABF.random_action(this.actions, {boost: [0, this.current_desire + this.reply_desire]});
-        ABF.random_action(this.actions, {boost: [0, this.reply_desire]});
+        ABF.random_action(this.actions, {boosts: [{action_i: 0, chance: this.reply_desire}, {action_i: 1, chance: this.seen_boring_posts}]});
+//      ABF.random_action(this.actions);
         if (this.position !== false) {
-          this.read_post();
+          this.read_current_post();
         }
       }
       // reduce reply desire with time
-      if (this.reply_desire >= 30) { // maybe TODO 5
-        this.reply_desire -= 30;
+      if (this.reply_desire >= 5) { // maybe TODO 5
+        this.reply_desire -= 5;
       } else {
         this.reply_desire = 0;
       }
@@ -79,37 +84,54 @@ Actor = (function() {
   };
   ///
   
-  construct.prototype.read_post = function() {
+  construct.prototype.read_current_post = function() {
     var post = this.post(),
         parent_post = post.previous(post.indent - 1);
-    if ((this.forum.options.mode != ABF.MODES.random && post.indent === 0) || post.seen[this.id]) { // a thread or a seen post
-      this.current_desire = this.current_desire - 0.2; // lose desire
-      this.next_desire = this.next_desire + 0.1;
-      this.reading = false;
+    if (post.seen[this.id]) {
+      this.skim_post(post); 
     } else {
-      this.current_desire--; // lose desire / satisfy need to read
-      if (post.topic == this.topic) {
-//        this.next_desire = this.next_desire + 1.5;
-        this.next_desire = this.next_desire + 2.5;
-        if (this.forum.options.mode == ABF.MODES.ordered) {
-          post.rating += 1;
-        }
+      if (this.forum.options.mode != ABF.MODES.random && post.indent === 0) { // a thread or a seen post
+        this.skim_post(post);
+        this.upvote_post(post);
       } else {
-        this.next_desire = this.next_desire + 0.7;
+        this.current_desire--; // lose desire / satisfy need to read
+        if (post.topic == this.topic) {
+//          this.next_desire = this.next_desire + 1.5;
+//          this.next_desire = this.next_desire + 2.5;
+          this.next_desire = this.next_desire + 2.0;
+          this.upvote_post(post);
+        } else {
+          this.next_desire = this.next_desire + 0.7;
+          this.seen_boring_posts++;
+        }
+        this.reading = true;
+      }
+      if (parent_post && parent_post.author == this) {
+        this.reply_desire += 50;
+        this.current_desire += 10;
       }
       post.seen[this.id] = true;
-      this.reading = true;
     }
-    if (parent_post && parent_post.author == this) {
-      this.reply_desire += 150;
-      this.current_desire += 10;
+  };
+
+  construct.prototype.skim_post = function(post) {
+    this.current_desire = this.current_desire - 0.2; // lose desire
+    this.next_desire = this.next_desire + 0.1;
+    this.reading = false;
+  };
+
+  construct.prototype.upvote_post = function(post) {
+    if (this.forum.options.mode == ABF.MODES.ordered) {
+      post.rating += 1;
     }
   };
 
   construct.prototype.to_next_post = function() {
-    var old_post = this.post();
+    var old_post = this.post(),
+        post;
     do {
       // Passes by comments to uninteresting posts (for free)
+//      if (old_post.topic == this.topic || ABF.fifty_fifty()) {
       if (old_post.topic == this.topic) {
         post = old_post.next();
       } else {
@@ -127,16 +149,25 @@ Actor = (function() {
   };
 
   construct.prototype.to_next_thread = function() {
-    var thread = this.post().thread.next();
-    // Free pass for threads that are uninteresting, or have been seen
-    while (thread && thread.posts[0].topic != this.topic) {
-//    while (thread && ((thread.posts[0].topic != this.topic) ||
-//        (thread.posts[0].seen[this.id] && !thread.posted_in[this.id]))) {
-//        TODO
+    var thread = this.post().thread,
+        pass;
+    this.seen_boring_posts = 0;
+    do {
+      pass = false;
       thread = thread.next();
-    }
+      if (thread && thread.posts[0].topic != this.topic) {
+        pass = true
+        // Free pass for threads that are uninteresting and have been seen
+//        if (thread.posts[0].seen[this.id]) {
+//          pass = true;
+//        } else {
+//          pass = ABF.fifty_fifty();
+//        }
+      }
+    } while (pass);
     if (thread) {
       this.position = thread.posts[0].id;
+      this.current_desire -= 0.2; // Cognitive load / loading time
     } else {
       this.go_offline();
     }
@@ -144,7 +175,8 @@ Actor = (function() {
 
   construct.prototype.to_reply = function() {
     var old_post = this.post();
-    var post = old_post.reply(this, ABF.random_action(ABF.TOPIC_ACTIONS, {swap: old_post.topic}));
+    var post = old_post.reply(this, ABF.random_action(ABF.TOPIC_ACTIONS, {swap: old_post.topic, boosts: [{action_i: old_post.thread.posts[0].topic, fraction: 0.5}]}));
+//    var post = old_post.reply(this, ABF.random_action(ABF.TOPIC_ACTIONS, {swap: old_post.topic}));
     this.position = post.id;
     this.current_desire -= 5;
   };
@@ -161,7 +193,7 @@ Actor = (function() {
   };
 
   construct.prototype.go_offline = function() {
-    this.current_desire = this.next_desire; // Desire carries over
+    this.current_desire = this.next_desire + Math.min(this.current_desire, 25); // 25 desire carries over
     this.next_desire = 0;
     this.position = false;
   };

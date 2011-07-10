@@ -25,14 +25,14 @@ ABF.prepare_actions = function(actions, options) {
       i,
       structure = {};
   if (actions[actions.length - 1].total) {
-    structure.total = actions[actions.length - 1].total;
+    structure.total = actions[actions.length - 1].total * 1.0; // to float
     if (actions[actions.length - 1].action) {
       actions[actions.length - 1].chance = structure.total;
     } else {
       actions[actions.length - 1].action = ABF.skip;
     }
   } else {
-    structure.total = 0;
+    structure.total = 0.0;
     for (i = 0; i < actions.length; i++) {
       structure.total += actions[i].chance;
     }
@@ -50,16 +50,39 @@ ABF.prepare_actions = function(actions, options) {
 };
 
 ABF.random_action = function(actions, options) {
-  var roll;
-  if (options && options.boost) {
-    roll = Math.random() * (1 + options.boost[1] / actions.total);
-    if (roll > 1) {
-      actions.actions[options.boost[0]].action();
+  var roll,
+      boosts_fraction = 0,
+      i;
+  if (options && options.boosts) {
+    roll = Math.random() * (1.0 + options.boosts[0]);
+    if (roll >= 1) {
+      if (options.boosts[2] && roll - 1 < options.boosts[1]) {
+        actions.actions[options.boosts[i].action_i].action();
+      } else {
+        
+      }
+    }
+    
+
+    for (i = 0; i < options.boosts.length; i++) {
+      if (options.boosts[i].chance !== undefined) {
+        options.boosts[i].fraction = options.boosts[i].chance / actions.total;
+      }
+      options.boosts[i].cutoff = boosts_fraction + options.boosts[i].fraction;
+      boosts_fraction += options.boosts[i].fraction;
+    }
+    roll = Math.random() * (1.0 + boosts_fraction);
+    if (roll >= 1) {
+      for (i = 0; i < options.boosts.length; i++) {
+        if (roll < options.boosts[i].cutoff) {
+          actions.actions[options.boosts[i].action_i].action();
+        }
+      }
     }
   } else {
     roll = Math.random();
   }
-  for (var i = 0; i < actions.actions.length; i++) {
+  for (i = 0; i < actions.actions.length; i++) {
     if (roll < actions.actions[i].cutoff) {
       if (options && options.swap) {
         if (i === 0) { // If 0, and swap 0, still 0
@@ -73,11 +96,21 @@ ABF.random_action = function(actions, options) {
   }
 };
 
+ABF.fifty_fifty_flipper = true;
+
+ABF.fifty_fifty = function() {
+  if (ABF.fifty_fifty_flipper) {
+    return (ABF.fifty_fifty_flipper = false);
+  } else {
+    return (ABF.fifty_fifty_flipper = true);
+  }
+};
+
 ABF.topic_actions = function(topics) {
   actions = [];
   for (var i = topics - 1; i >= 0; i--) {
     actions.push({
-      chance: Math.pow(2, i),
+      chance: Math.pow(ABF.DEFAULT_OPTIONS.topic_power, i),
       action: ABF.arg_returning_function(topics - i - 1) });
   }
   actions = ABF.prepare_actions(actions);
@@ -111,8 +144,16 @@ ABF.topic_colors = function(topics) {
   return topic_colors;
 };
 
-ABF.sort_by_rating = function(a, b) {
+ABF.sort_by_first_posts_weight = function(a, b) {
+  return a.posts[0].weight - b.posts[0].weight;
+};
+
+ABF.sort_by_first_element = function(a, b) {
   return b[0] - a[0];
+};
+
+ABF.hn_weight = function(rating, time) {
+  return (rating - 1) / Math.pow((time / 10.0 + 2), 1.8);
 };
 
 // Randomization / normal distributions

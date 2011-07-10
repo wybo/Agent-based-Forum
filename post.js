@@ -8,12 +8,8 @@ Post = (function() {
   construct = function(options, thread) {
     this.thread = thread;
     this.id = this.thread.forum.posts_id_counter++;
-    if (!this.thread.forum.daily_unique_posters_hash[this.id]) {
-      this.thread.forum.daily_unique_posters_hash[this.id] = 1;
-      this.thread.forum.daily_unique_posters_count++;
-    }
     this.indent = options.indent;
-    if (options.topic) {
+    if (options.topic !== undefined) {
       this.topic = options.topic;
     } else {
       this.topic = ABF.random_action(ABF.TOPIC_ACTIONS);
@@ -33,12 +29,21 @@ Post = (function() {
     this.thread.forum.positions_hash[this.id] = 
         {thread: options.thread_index, post: options.index};
     if (this.thread.forum.options.mode == ABF.MODES.ordered) {
-      this.rating = 0;
+      if (this.indent === 0) {
+        this.rating = 3; // Bonus to get new threads going
+      } else {
+        this.rating = 0;
+      }
+      this.time = this.thread.forum.run_count;
     }
     this.seen = {};
     this.seen[this.author_id] = true;
     this.posted_in = {};
     this.posted_in[this.author_id] = true;
+    if (!this.thread.forum.daily_unique_posters_hash[this.id]) {
+      this.thread.forum.daily_unique_posters_hash[this.id] = 1;
+      this.thread.forum.daily_unique_posters_count++;
+    }
     return this;
   };
 
@@ -133,6 +138,14 @@ Post = (function() {
     context.stroke();
     context.fillStyle = this.color;
     context.fill();
+    if (ABF.DEBUG) {
+      if (this.thread.forum.options.mode == ABF.MODES.ordered) {
+        context.fillText(this.rating, x, y);
+      }
+      if (this.indent === 0) {
+        context.fillText(this.thread.posts.length, x - 2, y - 10);
+      }
+    }
     this.inserted = false;
   };
 
