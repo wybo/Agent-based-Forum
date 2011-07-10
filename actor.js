@@ -53,7 +53,7 @@ Actor = (function() {
   /// Agent rate and objective functions
   construct.prototype.run = function() {
     if (this.position === false) { // is offline, rate function
-      if (this.current_desire < 2) {
+      if (this.current_desire < this.forum.options.c_d_leave_cutoff) {
         this.leave_forum();
       } else {
         var roll = Math.floor(Math.random()*1001);
@@ -64,19 +64,18 @@ Actor = (function() {
       }
     } else { // is visiting forum, objective function
       // this.own_post_bonus() could be added;
-      if (this.current_desire < 0) { // no desire left, leave
+      if (this.current_desire < this.forum.options.c_d_offline_cutoff) { // no desire left, leave
         this.go_offline();
       } else {
         //ABF.random_action(this.actions, {boost: [0, this.current_desire + this.reply_desire]});
-        ABF.random_action(this.actions, {boosts: [{action_i: 0, chance: this.reply_desire}, {action_i: 1, chance: this.seen_boring_posts}]});
-//      ABF.random_action(this.actions);
+        ABF.random_action(this.actions, [[0, (this.reply_desire + this.seen_boring_posts) / actions.total], [1, this.seen_boring_posts / actions.total]]);
         if (this.position !== false) {
           this.read_current_post();
         }
       }
       // reduce reply desire with time
-      if (this.reply_desire >= 5) { // maybe TODO 5
-        this.reply_desire -= 5;
+      if (this.reply_desire >= this.forum.options.r_d_drop_off) { // maybe TODO 5
+        this.reply_desire -= this.forum.options.r_d_drop_off;
       } else {
         this.reply_desire = 0;
       }
@@ -94,29 +93,27 @@ Actor = (function() {
         this.skim_post(post);
         this.upvote_post(post);
       } else {
-        this.current_desire--; // lose desire / satisfy need to read
+        this.current_desire += this.forum.options.c_d_read; // lose desire / satisfy need to read
         if (post.topic == this.topic) {
-//          this.next_desire = this.next_desire + 1.5;
-//          this.next_desire = this.next_desire + 2.5;
-          this.next_desire = this.next_desire + 2.0;
+          this.next_desire += this.forum.options.n_d_on_topic;
           this.upvote_post(post);
         } else {
-          this.next_desire = this.next_desire + 0.7;
+          this.next_desire += this.forum.options.n_d_off_topic;
           this.seen_boring_posts++;
         }
         this.reading = true;
       }
       if (parent_post && parent_post.author == this) {
-        this.reply_desire += 50;
-        this.current_desire += 10;
+        this.current_desire += this.forum.options.c_d_received_reply;
+        this.reply_desire += this.forum.options.r_d_received_reply;
       }
       post.seen[this.id] = true;
     }
   };
 
   construct.prototype.skim_post = function(post) {
-    this.current_desire = this.current_desire - 0.2; // lose desire
-    this.next_desire = this.next_desire + 0.1;
+    this.current_desire += this.forum.options.c_d_skim; // lose desire
+    this.next_desire += this.forum.options.n_d_skim_compensation; // regain for next
     this.reading = false;
   };
 
@@ -129,7 +126,7 @@ Actor = (function() {
   construct.prototype.to_next_post = function() {
     var old_post = this.post(),
         post;
-    do {
+//    do {
       // Passes by comments to uninteresting posts (for free)
 //      if (old_post.topic == this.topic || ABF.fifty_fifty()) {
       if (old_post.topic == this.topic) {
@@ -140,7 +137,7 @@ Actor = (function() {
       old_post = post;
       // Passes posts that have been seen (for free), 
       // unless commented below
-    } while (post && post.seen[this.id] && !post.posted_in[this.id]);
+//    } while (post && post.seen[this.id] && !post.posted_in[this.id]);
     if (post) {
       this.position = post.id;
     } else {
@@ -156,7 +153,11 @@ Actor = (function() {
       pass = false;
       thread = thread.next();
       if (thread && thread.posts[0].topic != this.topic) {
-        pass = true
+        if (this.forum.options.mode != ABF.MODES.random) {
+          pass = true;
+        } else {
+          pass = false;
+        }
         // Free pass for threads that are uninteresting and have been seen
 //        if (thread.posts[0].seen[this.id]) {
 //          pass = true;
@@ -167,7 +168,7 @@ Actor = (function() {
     } while (pass);
     if (thread) {
       this.position = thread.posts[0].id;
-      this.current_desire -= 0.2; // Cognitive load / loading time
+      this.current_desire += this.forum.options.c_d_page_load; // Cognitive load / loading time
     } else {
       this.go_offline();
     }
@@ -175,16 +176,16 @@ Actor = (function() {
 
   construct.prototype.to_reply = function() {
     var old_post = this.post();
-    var post = old_post.reply(this, ABF.random_action(ABF.TOPIC_ACTIONS, {swap: old_post.topic, boosts: [{action_i: old_post.thread.posts[0].topic, fraction: 0.5}]}));
+    var post = old_post.reply(this, ABF.random_action(ABF.TOPIC_ACTIONS, [[old_post.thread.posts[0].topic, 0.5]], old_post.topic));
 //    var post = old_post.reply(this, ABF.random_action(ABF.TOPIC_ACTIONS, {swap: old_post.topic}));
     this.position = post.id;
-    this.current_desire -= 5;
+    this.current_desire += this.forum.options.c_d_create;
   };
 
   construct.prototype.to_new_thread = function() {
-    var thread = this.post().thread.new_thread(this, ABF.random_action(ABF.TOPIC_ACTIONS, {swap: this.topic}));
+    var thread = this.post().thread.new_thread(this, ABF.random_action(ABF.TOPIC_ACTIONS, false, this.topic));
     this.position = thread.posts[0].id;
-    this.current_desire -= 5;
+    this.current_desire += this.forum.options.c_d_create;
   };
 
   construct.prototype.post = function() {
@@ -193,7 +194,7 @@ Actor = (function() {
   };
 
   construct.prototype.go_offline = function() {
-    this.current_desire = this.next_desire + Math.min(this.current_desire, 25); // 25 desire carries over
+    this.current_desire = this.next_desire + Math.min(this.current_desire, this.forum.options.c_d_current_carry_over);
     this.next_desire = 0;
     this.position = false;
   };

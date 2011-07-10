@@ -34,7 +34,8 @@ _display_config = function(div, config) {
   div.html('<p>Mode: ' + config.mode + ', Initial actors: ' + config.initial_actors +
       ', -threads: ' + config.initial_threads + ', Max threads: ' + config.max_threads + 
       ', Daily arrivals fraction: ' + config.daily_arrivals_fraction + 
-      ', Chance-reply: ' + config.reply_chance + ', -thread: ' + config.new_thread_chance + 
+      ', Chance-reply: ' + config.reply_chance + ', -new-thread: ' + config.new_thread_chance + 
+      ', -next-thread: ' + config.next_thread_chance + 
       ', Topic power: ' + config.topic_power + ', Note: ' + config.note + ' </p>');
 };
 

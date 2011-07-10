@@ -49,45 +49,26 @@ ABF.prepare_actions = function(actions, options) {
   return structure;
 };
 
-ABF.random_action = function(actions, options) {
-  var roll,
-      boosts_fraction = 0,
-      i;
-  if (options && options.boosts) {
-    roll = Math.random() * (1.0 + options.boosts[0]);
+ABF.random_action = function(actions, boosts, swap) {
+  var roll;
+  if (boosts) {
+    roll = Math.random() * (1.0 + boosts[0][1]);
     if (roll >= 1) {
-      if (options.boosts[2] && roll - 1 < options.boosts[1]) {
-        actions.actions[options.boosts[i].action_i].action();
+      if (boosts[1] && boosts[1][1] < roll - 1) {
+        return actions.actions[boosts[1][0]].action();
       } else {
-        
-      }
-    }
-    
-
-    for (i = 0; i < options.boosts.length; i++) {
-      if (options.boosts[i].chance !== undefined) {
-        options.boosts[i].fraction = options.boosts[i].chance / actions.total;
-      }
-      options.boosts[i].cutoff = boosts_fraction + options.boosts[i].fraction;
-      boosts_fraction += options.boosts[i].fraction;
-    }
-    roll = Math.random() * (1.0 + boosts_fraction);
-    if (roll >= 1) {
-      for (i = 0; i < options.boosts.length; i++) {
-        if (roll < options.boosts[i].cutoff) {
-          actions.actions[options.boosts[i].action_i].action();
-        }
+        return actions.actions[boosts[0][0]].action();
       }
     }
   } else {
     roll = Math.random();
   }
-  for (i = 0; i < actions.actions.length; i++) {
+  for (var i = 0; i < actions.actions.length; i++) {
     if (roll < actions.actions[i].cutoff) {
-      if (options && options.swap) {
+      if (swap) {
         if (i === 0) { // If 0, and swap 0, still 0
-          i = options.swap;
-        } else if (i == options.swap) {
+          i = swap;
+        } else if (i == swap) {
           i = 0;
         }
       }
