@@ -86,7 +86,8 @@ Forum = (function() {
       for (i = 0; i < init_array.length; i++) {
         for (j = 0; j < init_array[i].length; j++) {
           if (init_array[i][j].indent !== 0) {
-            init_array[i][j].indent = 1;
+//            init_array[i][j].indent = 1;
+            init_array[i][j].indent = j;
           }
         }
       }

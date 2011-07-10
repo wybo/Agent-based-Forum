@@ -11,7 +11,7 @@ generations = 3600; // 15 days
 
 initial_actor_settings = [50, 100, 200];
 
-note = "No entering of (sub)threads if not users topic, no free passes for seen";
+note = "Flat threads reply-indents + no entering if !topic & no free passes. Changed offt bonus";
 
 tests = [
       {

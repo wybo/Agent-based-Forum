@@ -129,7 +129,7 @@ Actor = (function() {
 //    do {
       // Passes by comments to uninteresting posts (for free)
 //      if (old_post.topic == this.topic || ABF.fifty_fifty()) {
-      if (old_post.topic == this.topic) {
+      if (old_post.topic == this.topic || this.forum.options.mode == ABF.MODES.threaded) {
         post = old_post.next();
       } else {
         post = old_post.next(old_post.indent);

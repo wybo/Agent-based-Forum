@@ -32,12 +32,12 @@ ABF.DEFAULT_OPTIONS.c_d_current_carry_over = 25; // Max current desire carried o
 ABF.DEFAULT_OPTIONS.c_d_leave_cutoff = 2;
 ABF.DEFAULT_OPTIONS.c_d_offline_cutoff = 0;
 // next
-ABF.DEFAULT_OPTIONS.n_d_on_topic = 2.3;
-ABF.DEFAULT_OPTIONS.n_d_off_topic = 0;
+ABF.DEFAULT_OPTIONS.n_d_on_topic = 2.0;
+ABF.DEFAULT_OPTIONS.n_d_off_topic = 0.5;
 ABF.DEFAULT_OPTIONS.n_d_skim_compensation = 0.2;
 // reply
 ABF.DEFAULT_OPTIONS.r_d_received_reply = 50;
-ABF.DEFAULT_OPTIONS.r_d_drop_off = 50;
+ABF.DEFAULT_OPTIONS.r_d_drop_off = 5;
 
 // Normally not changed
 ABF.DEFAULT_OPTIONS.direction = ABF.DIRECTIONS.newold; // new threads shown first

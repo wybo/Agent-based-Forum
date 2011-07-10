@@ -85,21 +85,23 @@ Post = (function() {
         indent_pointer,
         i;
     position_hash = this.thread.forum.positions_hash[this.id];
-    post = this.thread.posts[position_hash.post];
+    post = this.thread.posts[position_hash.post]; // TODO use this instead
     // Find insert position
-    for (i = position_hash.post + 1; i < this.thread.posts.length; i++) {
-      if (insert_position === false) {
-        if (this.thread.posts[i].indent <= post.indent) {
-          insert_position = i;
+    if (this.thread.forum.options.mode != ABF.MODES.threaded) {
+      for (i = position_hash.post + 1; i < this.thread.posts.length; i++) {
+        if (insert_position === false) {
+          if (this.thread.posts[i].indent <= post.indent) {
+            insert_position = i;
+          }
         }
       }
     }
-    if (insert_position === false) { // Random or found none
+    if (insert_position === false) { // Threaded (flat) or found none
       insert_position = this.thread.posts.length;
     }
     // Insert reply at the given position
     if (this.thread.forum.options.mode == ABF.MODES.threaded) {
-      insert_indent = 1;
+      insert_indent = this.thread.posts.length;
     } else if (this.thread.forum.options.mode == ABF.MODES.subthreaded || this.thread.forum.options.mode == ABF.MODES.ordered) {
       insert_indent = post.indent + 1;
     } else {
