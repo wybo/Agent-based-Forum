@@ -35,7 +35,7 @@ ABF.DEFAULT_OPTIONS.c_d_page_load = -0.2;
 ABF.DEFAULT_OPTIONS.c_d_skim = -0.1;
 ABF.DEFAULT_OPTIONS.c_d_received_reply_bonus = 10; // Also see received_reply_reply_desire
 // next
-ABF.DEFAULT_OPTIONS.n_d_on_topic = 2.0;
+ABF.DEFAULT_OPTIONS.n_d_on_topic = 1.8;
 ABF.DEFAULT_OPTIONS.n_d_off_topic = 0.5;
 ABF.DEFAULT_OPTIONS.n_d_skim_compensation = 0.2;
 // reply

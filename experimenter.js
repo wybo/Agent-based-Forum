@@ -11,7 +11,7 @@ generations = 3600; // 15 days
 
 initial_actor_settings = [50, 100, 200];
 
-note = "Flat threads reply-indents + no entering if !topic & no free passes. Changed reply_desire bonus";
+note = "Flat threads reply-indents + no entering if !topic & no free passes. Lowered ontopic bonus";
 
 tests = [
       {
