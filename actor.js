@@ -16,7 +16,7 @@ Actor = (function() {
     // The position, false if offline
     this.position = (options.position ? options.position : false);
     this.next_desire = 0;
-    this.current_desire = 2 + Math.floor(Math.random() * (25 + 1));
+    this.current_desire = this.forum.options.c_d_leave_cutoff + Math.floor(Math.random() * (this.forum.options.c_d_max_starting));
     this.reply_desire = 0;
     this.topic = ABF.random_action(ABF.TOPIC_ACTIONS);
     this.actions = [];
@@ -57,7 +57,7 @@ Actor = (function() {
         this.leave_forum();
       } else {
         var roll = Math.floor(Math.random()*1001);
-        if (this.current_desire > roll) { // if desire greater than roll
+        if (this.current_desire / this.forum.options.desire_for_online_divider > roll) { // if desire greater than roll
           this.go_online();
           this.read_current_post();
         }
@@ -75,7 +75,7 @@ Actor = (function() {
       }
       // reduce reply desire with time
       if (this.reply_desire >= this.forum.options.r_d_drop_off) { // maybe TODO 5
-        this.reply_desire -= this.forum.options.r_d_drop_off;
+        this.reply_desire += this.forum.options.r_d_drop_off;
       } else {
         this.reply_desire = 0;
       }
@@ -194,7 +194,7 @@ Actor = (function() {
   };
 
   construct.prototype.go_offline = function() {
-    this.current_desire = this.next_desire + Math.min(this.current_desire, this.forum.options.c_d_current_carry_over);
+    this.current_desire = this.next_desire + Math.min(this.current_desire, this.forum.options.c_d_max_starting);
     this.next_desire = 0;
     this.position = false;
   };

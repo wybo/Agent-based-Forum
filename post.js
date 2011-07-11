@@ -40,8 +40,8 @@ Post = (function() {
     this.seen[this.author_id] = true;
     this.posted_in = {};
     this.posted_in[this.author_id] = true;
-    if (!this.thread.forum.daily_unique_posters_hash[this.id]) {
-      this.thread.forum.daily_unique_posters_hash[this.id] = 1;
+    if (!this.thread.forum.daily_unique_posters_hash[this.author_id]) {
+      this.thread.forum.daily_unique_posters_hash[this.author_id] = true;
       this.thread.forum.daily_unique_posters_count++;
     }
     return this;

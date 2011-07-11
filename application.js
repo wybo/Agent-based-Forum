@@ -1,5 +1,8 @@
 experiment = [];
 
+MODE_STRINGS = ["Random (no threads)", "Threads (flat threads)", "Subthreads (indented)", "Ratings and subthreads (ordered)"];
+PLOT_STRINGS = ["Daily unique posters", "Users over time", "Daily arrivals and leavers", "Posts over time", "Threads over time"];
+
 setup_forum_gui = function(forum, space, plot_space, start, order) {
   forum.initialize_display(space, plot_space);
   var start_value = 'Start simulation';
@@ -30,13 +33,18 @@ display_config = function(config_space, config) {
   _display_config($(config_space), config);
 }
 
+_display_note = function(div, config) {
+  div.html('Plots in order: ' + PLOT_STRINGS.join(', ') + '<br /><br />' + 
+      'Note with experiment: ' + config.note);
+};
+
 _display_config = function(div, config) {
-  div.html('<p>Mode: ' + config.mode + ', Initial actors: ' + config.initial_actors +
+  div.html('<p>Mode: ' + MODE_STRINGS[config.mode] + ', Initial actors: ' + config.initial_actors +
       ', -threads: ' + config.initial_threads + ', Max threads: ' + config.max_threads + 
       ', Daily arrivals fraction: ' + config.daily_arrivals_fraction + 
       ', Chance-reply: ' + config.reply_chance + ', -new-thread: ' + config.new_thread_chance + 
       ', -next-thread: ' + config.next_thread_chance + 
-      ', Topic power: ' + config.topic_power + ', Note: ' + config.note + ' </p>');
+      ', Topic power: ' + config.topic_power + '</p>');
 };
 
 set_experiment = function(selector) {
@@ -64,7 +72,9 @@ fetch_and_plot_experiment = function(key) {
 
 plot_experiment = function() {
   var i;
-  $("#content").html('');
+  div = $("#content");
+  div.html('');
+  _display_note(div, experiment[0].config);
   for(i = 0; i < experiment.length; i++) {
     plot_test(experiment[i], i);
   }
