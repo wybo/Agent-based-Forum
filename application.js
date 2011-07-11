@@ -29,17 +29,45 @@ setup_forum_gui = function(forum, space, plot_space, start, order) {
   });
 };
 
-display_config = function(config_space, config) {
-  _display_config($(config_space), config);
+display_config = function(content_space, config) {
+  div = $(content_space);
+  _display_config(div, config);
 }
 
 _display_note = function(div, config) {
-  div.html('Plots in order: ' + PLOT_STRINGS.join(', ') + '<br /><br />' + 
+  div2 = $('<div>').css({'float' : 'left', 'clear' : 'left'});
+  $(div).append(div2);
+  div2.html('Plots in order: ' + PLOT_STRINGS.join(', ') + '<br /><br />' + 
       'Note with experiment: ' + config.note);
 };
 
+_display_costs_benefits = function(div, config) {
+  div2 = $('<div>').css({'float' : 'left', 'clear' : 'left'});
+  $(div).append(div2);
+  div2.html('<p>' +  
+    'Current<br />' +
+    'c_d_max_starting = ' + config.c_d_max_starting + '<br />' +
+    'c_d_leave_cutoff = ' + config.c_d_leave_cutoff + '<br />' +
+    'c_d_offline_cutoff = ' + config.c_d_offline_cutoff + '<br />' +
+    'c_d_read = ' + config.c_d_read + '<br />' +
+    'c_d_create = ' + config.c_d_create + '<br />' +
+    'c_d_page_load = ' + config.c_d_page_load + '<br />' +
+    'c_d_skim = ' + config.c_d_skim + '<br />' +
+    'c_d_received_reply_bonus = ' + config.c_d_received_reply_bonus + '<br />' +
+    'Next<br />' +
+    'n_d_on_topic = ' + config.n_d_on_topic + '<br />' +
+    'n_d_off_topic = ' + config.n_d_off_topic + '<br />' +
+    'n_d_skim_compensation = ' + config.n_d_skim_compensation + '<br />' +
+    'Reply<br />' +
+    'r_d_received_reply = ' + config.r_d_received_reply + '<br />' +
+    'r_d_drop_off = ' + config.r_d_drop_off + '<br />' +
+        '</p>');
+};
+
 _display_config = function(div, config) {
-  div.html('<p>Mode: ' + MODE_STRINGS[config.mode] + ', Initial actors: ' + config.initial_actors +
+  div2 = $('<div>').css({'float' : 'left', 'clear' : 'left'});
+  div.append(div2);
+  div2.html('<p>Mode: ' + MODE_STRINGS[config.mode] + ', Initial actors: ' + config.initial_actors +
       ', -threads: ' + config.initial_threads + ', Max threads: ' + config.max_threads + 
       ', Daily arrivals fraction: ' + config.daily_arrivals_fraction + 
       ', Chance-reply: ' + config.reply_chance + ', -new-thread: ' + config.new_thread_chance + 
@@ -73,11 +101,11 @@ fetch_and_plot_experiment = function(key) {
 plot_experiment = function() {
   var i;
   div = $("#content");
-  div.html('');
   _display_note(div, experiment[0].config);
   for(i = 0; i < experiment.length; i++) {
     plot_test(experiment[i], i);
   }
+  _display_costs_benefits(div, experiment[0].config);
 };
 
 plot_test = function(test, index) {
@@ -89,13 +117,14 @@ plot_test = function(test, index) {
           series: { shadowSize: 0 }, // drawing is faster without shadows
           xaxis: { show: false }
       };
-  div = $('<div>').css({'float' : 'left', 'clear' : 'left'});
-  $("#content").append(div);
+  div = $("#content");
   _display_config(div, test.config);
+  div2 = $('<div>').css({'float' : 'left', 'clear' : 'left'});
+  div.append(div2);
   for (i = 0; i < keys.length; i++) {
     if (test.data[keys[i]]) {
       space = $('<div>').css({'width' : '300px', 'height' : '160px', 'float' : 'left', 'margin-right' : '0.7em', 'margin-bottom' : '1em'});
-      div.append(space);
+      div2.append(space);
       $.plot(space, test.data[keys[i]], options);
     }
   }
