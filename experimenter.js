@@ -5,8 +5,8 @@ $.include('agent_based_forum.js');
 reruns = 20; // To average it out
 //reruns = 2; // To average it out
 
-//generations = 9600; // 40 days
-generations = 3600; // 15 days
+generations = 9600; // 40 days
+//generations = 3600; // 15 days
 //generations = 6;
 
 initial_actor_settings = [50, 100, 200];

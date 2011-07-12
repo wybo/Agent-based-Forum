@@ -113,9 +113,6 @@ Forum = (function() {
     var new_visitors,
         changed_positions = false,
         i;
-    if (this.run_count > 1 && this.run_count % 240 === 0) {
-      this.add_actors();
-    }
     for (i = 0; i < this.actors.length; i++) {
       this.actors[i].run();
       if (this.actors[i].left_forum) {
@@ -136,7 +133,10 @@ Forum = (function() {
       this.redo_positions_hash();
     }
     this.set_post_actors();
-    this.run_plot_data();
+    if (this.run_count > 1 && this.run_count % 240 === 0) {
+      this.add_actors();
+    }
+    this.run_plot_data(); // Resets daily_unique_posters_count
     if (this.canvas) {
       this.draw();
       this.draw_plot();
@@ -193,7 +193,8 @@ Forum = (function() {
   };
 
   construct.prototype.add_actors = function() {
-    this.daily_arrivals_remainder = this.daily_arrivals_remainder + this.actors.length * this.options.daily_arrivals_fraction;
+    this.daily_arrivals_remainder = this.daily_arrivals_remainder + 
+        this.daily_unique_posters_count * this.options.daily_arrivals_fraction;
     this.daily_arrivals_count = 0;
     for (i = 0; i < this.daily_arrivals_remainder; i++) {
       this.actors.push(new Actor({}, this));
