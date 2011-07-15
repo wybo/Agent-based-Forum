@@ -10,8 +10,9 @@ generations = 9600; // 40 days
 //generations = 6;
 
 initial_actor_settings = [50, 100, 200];
+//initial_actor_settings = [500, 1200];
 
-note = "Flat threads reply-indents + no entering if !topic & no free passes. Lowered ontopic bonus";
+note = "Fifty_fifty to 1//3rd and also for subthreads now";
 
 tests = [
       {

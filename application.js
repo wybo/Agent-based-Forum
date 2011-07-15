@@ -1,7 +1,7 @@
 experiment = [];
 
 MODE_STRINGS = ["Random (no threads)", "Threads (flat threads)", "Subthreads (indented)", "Ratings and subthreads (ordered)"];
-PLOT_STRINGS = ["Daily unique posters", "Users over time", "Daily arrivals and leavers", "Posts over time", "Threads over time"];
+PLOT_STRINGS = ["Daily unique posters", "Users over time", "Daily arrivals and leavers", "Posts over time", "Threads over time", "Users for each topic"];
 
 setup_forum_gui = function(forum, space, plot_space, start, order) {
   forum.initialize_display(space, plot_space);
@@ -34,45 +34,47 @@ display_config = function(content_space, config) {
   _display_config(div, config);
 }
 
+_display_config = function(div, config) {
+  div.html('<p>Mode: ' + MODE_STRINGS[config.mode] + ', Initial: ' + config.initial_actors +
+      ', -threads: ' + config.initial_threads + ', Max threads: ' + config.max_threads + 
+      ', Daily arrivals fr: ' + config.daily_arrivals_fraction + 
+      ', Chance-reply: ' + config.reply_chance + ', -new-thread: ' + config.new_thread_chance + 
+      ', -next-thread: ' + config.next_thread_chance + 
+      ', Topic power: ' + config.topic_power + 
+      ', Online divider ' + config.desire_for_online_divider + '</p>');
+};
+
 _display_note = function(div, config) {
-  div2 = $('<div>').css({'float' : 'left', 'clear' : 'left'});
+  div2 = $('<div>').css({'float' : 'left', 'clear' : 'left'}).attr('id', 'note_space');
   $(div).append(div2);
   div2.html('Plots in order: ' + PLOT_STRINGS.join(', ') + '<br /><br />' + 
       'Note with experiment: ' + config.note);
 };
 
 _display_costs_benefits = function(div, config) {
-  div2 = $('<div>').css({'float' : 'left', 'clear' : 'left'});
+  div2 = $('<div>').css({'float' : 'left', 'clear' : 'left'}).attr('id', 'costs_benefits_space');
   $(div).append(div2);
   div2.html('<p>' +  
     'Current<br />' +
     'c_d_max_starting = ' + config.c_d_max_starting + '<br />' +
-    'c_d_leave_cutoff = ' + config.c_d_leave_cutoff + '<br />' +
-    'c_d_offline_cutoff = ' + config.c_d_offline_cutoff + '<br />' +
     'c_d_read = ' + config.c_d_read + '<br />' +
     'c_d_create = ' + config.c_d_create + '<br />' +
     'c_d_page_load = ' + config.c_d_page_load + '<br />' +
-    'c_d_skim = ' + config.c_d_skim + '<br />' +
-    'c_d_received_reply_bonus = ' + config.c_d_received_reply_bonus + '<br />' +
+    'c_d_offline_cutoff = ' + config.c_d_offline_cutoff + '<br />' +
+    'c_d_nothing_left = ' + config.c_d_nothing_left + '<br />' +
+    'c_d_leave_cutoff = ' + config.c_d_leave_cutoff + '<br />' +
     'Next<br />' +
     'n_d_on_topic = ' + config.n_d_on_topic + '<br />' +
     'n_d_off_topic = ' + config.n_d_off_topic + '<br />' +
-    'n_d_skim_compensation = ' + config.n_d_skim_compensation + '<br />' +
+    'n_d_received_reply = ' + config.n_d_received_reply + '<br />' +
     'Reply<br />' +
     'r_d_received_reply = ' + config.r_d_received_reply + '<br />' +
     'r_d_drop_off = ' + config.r_d_drop_off + '<br />' +
+    'Old<br />' +
+    'c_d_received_reply = ' + config.c_d_received_reply + '<br />' +
+    'c_d_skim = ' + config.c_d_skim + '<br />' +
+    'n_d_skim_compensation = ' + config.n_d_skim_compensation + '<br />' +
         '</p>');
-};
-
-_display_config = function(div, config) {
-  div2 = $('<div>').css({'float' : 'left', 'clear' : 'left'});
-  div.append(div2);
-  div2.html('<p>Mode: ' + MODE_STRINGS[config.mode] + ', Initial actors: ' + config.initial_actors +
-      ', -threads: ' + config.initial_threads + ', Max threads: ' + config.max_threads + 
-      ', Daily arrivals fraction: ' + config.daily_arrivals_fraction + 
-      ', Chance-reply: ' + config.reply_chance + ', -new-thread: ' + config.new_thread_chance + 
-      ', -next-thread: ' + config.next_thread_chance + 
-      ', Topic power: ' + config.topic_power + '</p>');
 };
 
 set_experiment = function(selector) {
@@ -101,6 +103,7 @@ fetch_and_plot_experiment = function(key) {
 plot_experiment = function() {
   var i;
   div = $("#content");
+  div.html('');
   _display_note(div, experiment[0].config);
   for(i = 0; i < experiment.length; i++) {
     plot_test(experiment[i], i);
@@ -118,7 +121,9 @@ plot_test = function(test, index) {
           xaxis: { show: false }
       };
   div = $("#content");
-  _display_config(div, test.config);
+  div2 = $('<div>').css({'float' : 'left', 'clear' : 'left'});
+  div.append(div2);
+  _display_config(div2, test.config);
   div2 = $('<div>').css({'float' : 'left', 'clear' : 'left'});
   div.append(div2);
   for (i = 0; i < keys.length; i++) {

@@ -36,6 +36,7 @@ Forum = (function() {
     this.posts_id_counter = 0; // also for counting
     this.run_count = 0;
     this.users_count = 0;
+    this.users_per_topic_count = [];
     this.daily_unique_posters_count = 0;
     this.daily_arrivals_remainder = 0;
     this.daily_arrivals_count = 0;
@@ -48,6 +49,10 @@ Forum = (function() {
     this.plot_daily_leavers = [];
     this.plot_posts = [];
     this.plot_threads = [];
+    this.plot_topics = [];
+    for (i = 0; i < 4; i++) {
+      this.plot_topics[i] = [];
+    }
 
     this.daily_unique_posters_hash = [];
 
@@ -86,7 +91,6 @@ Forum = (function() {
       for (i = 0; i < init_array.length; i++) {
         for (j = 0; j < init_array[i].length; j++) {
           if (init_array[i][j].indent !== 0) {
-//            init_array[i][j].indent = 1;
             init_array[i][j].indent = j;
           }
         }
@@ -280,6 +284,9 @@ Forum = (function() {
     this.plot_posts.push([this.run_count, this.posts_id_counter]);
     this.plot_users.push([this.run_count, this.users_count]);
     this.plot_threads.push([this.run_count, this.threads_count]);
+    for (i = 0; i < 4; i++) {
+      this.plot_topics[i].push([this.run_count, this.users_per_topic_count[i]]);
+    }
 
     if (this.run_count % 240 === 0) {
       this.plot_daily_unique_posters.push([this.run_count, this.daily_unique_posters_count]);
@@ -301,7 +308,10 @@ Forum = (function() {
       this.plotter.setData([this.plot_posts]);
     } else if (this.plot == ABF.PLOTS.threads) {
       this.plotter.setData([this.plot_threads]);
+    } else if (this.plot == ABF.PLOTS.topics) {
+      this.plotter.setData(this.plot_topics);
     }
+
     this.plotter.setupGrid();
     this.plotter.draw();
   };
@@ -314,7 +324,8 @@ Forum = (function() {
             users: [this.plot_users],
             arrivals_leavers: [this.plot_daily_arrivals, this.plot_daily_leavers],
             posts: [this.plot_posts],
-            threads: [this.plot_threads]
+            threads: [this.plot_threads],
+            topics: this.plot_topics
         }};
   };
 

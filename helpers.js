@@ -77,14 +77,19 @@ ABF.random_action = function(actions, boosts, swap) {
   }
 };
 
-ABF.fifty_fifty_flipper = true;
+//ABF.fifty_fifty_flipper = true;
 
 ABF.fifty_fifty = function() {
-  if (ABF.fifty_fifty_flipper) {
-    return (ABF.fifty_fifty_flipper = false);
+  if (Math.random() > 0.66) {
+    return true;
   } else {
-    return (ABF.fifty_fifty_flipper = true);
+    return false;
   }
+//  if (ABF.fifty_fifty_flipper) {
+//    return (ABF.fifty_fifty_flipper = false);
+//  } else {
+//    return (ABF.fifty_fifty_flipper = true);
+//  }
 };
 
 ABF.topic_actions = function(topics) {

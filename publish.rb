@@ -8,16 +8,7 @@ else
 end
 PUBLISH_COMMAND ||= nil
 
-system "git commit -a"
-system "git push"
-
-system "tar -czf trunk.tgz *"
-files = Dir.glob("*.js")
-files.delete("jquery.js")
-files.delete("include.js")
-files.push(files.delete("agent_based_forum.js")) # last
-important_parts = []
-files.each do |file_name|
+def highlight_file(file_name)
   system "vim #{file_name} -c 'runtime! syntax/2html.vim | wq | q'"
   lines = open("#{file_name}.html").readlines
   open_div = false
@@ -55,6 +46,19 @@ files.each do |file_name|
     line_number += 1
   end
   open("#{file_name}.html", "w") { |file| file.write(lines.join()) }
+end
+
+system "git commit -a"
+system "git push"
+
+system "tar -czf trunk.tgz *"
+files = Dir.glob("*.js")
+files.delete("jquery.js")
+files.delete("include.js")
+files.push(files.delete("agent_based_forum.js")) # last
+important_parts = []
+files.each do |file_name|
+  highlight_file(file_name)
 end
 if PUBLISH_COMMAND
   puts PUBLISH_COMMAND

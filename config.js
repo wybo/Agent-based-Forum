@@ -5,7 +5,7 @@
 /// Settings
 ABF.DIRECTIONS = {oldnew: 0, newold: 1};
 ABF.MODES = {random: 0, threaded: 1, subthreaded: 2, ordered: 3};
-ABF.PLOTS = {unique_posters: 0, users: 1, arrivals_leavers: 2, posts: 3, threads: 4};
+ABF.PLOTS = {unique_posters: 0, users: 1, arrivals_leavers: 2, posts: 3, threads: 4, topics: 5};
 
 ABF.DEFAULT_OPTIONS = {};
 
@@ -17,9 +17,9 @@ ABF.DEFAULT_OPTIONS.mode = ABF.MODES.ordered;
 
 // Chances 
 ABF.DEFAULT_OPTIONS.reply_chance = 25; // out of a thousand, per tick, 1 / 40.0 space * 1000
-ABF.DEFAULT_OPTIONS.next_thread_chance = 10; // out of a thousand, per tick, 1 / 100.0 * 1000
+ABF.DEFAULT_OPTIONS.next_thread_chance = 20; // out of a thousand, per tick, 1 / 100.0 * 1000
 ABF.DEFAULT_OPTIONS.new_thread_chance = 1.25; // out of a thousand, per tick, 1 / 20.0 / 40.0 * 1000
-ABF.DEFAULT_OPTIONS.daily_arrivals_fraction = 0.05; // Fraction of current arriving every day
+ABF.DEFAULT_OPTIONS.daily_arrivals_fraction = 0.10; // 0.05 // Fraction of current arriving every day
 ABF.DEFAULT_OPTIONS.desire_for_online_divider = 4.0; // > roll, current_desire divided by this, 15 / (1 / 240.0 * 1000) = 3.6
 // 240 ticks is a day, so slightly less often than once a day with avg starting desire
 
@@ -30,16 +30,17 @@ ABF.DEFAULT_OPTIONS.c_d_max_starting = 30; // Actors receive this + c_d_leave_cu
 ABF.DEFAULT_OPTIONS.c_d_leave_cutoff = 5;
 ABF.DEFAULT_OPTIONS.c_d_offline_cutoff = 0;
 ABF.DEFAULT_OPTIONS.c_d_read = -1;
-ABF.DEFAULT_OPTIONS.c_d_create = -2;
+ABF.DEFAULT_OPTIONS.c_d_create = -2.5; // -2
 ABF.DEFAULT_OPTIONS.c_d_page_load = -0.2;
-ABF.DEFAULT_OPTIONS.c_d_skim = -0.1;
-ABF.DEFAULT_OPTIONS.c_d_received_reply_bonus = 10; // Also see received_reply_reply_desire
+ABF.DEFAULT_OPTIONS.c_d_skim = 0.0;
+ABF.DEFAULT_OPTIONS.c_d_nothing_left = -10; // Substracted from any remaining that is carried over
 // next
-ABF.DEFAULT_OPTIONS.n_d_on_topic = 1.5;
-ABF.DEFAULT_OPTIONS.n_d_off_topic = 0.3;
-ABF.DEFAULT_OPTIONS.n_d_skim_compensation = 0.2;
+ABF.DEFAULT_OPTIONS.n_d_on_topic = 1.5; // 2.3
+ABF.DEFAULT_OPTIONS.n_d_off_topic = 0.5; // -0.5
+ABF.DEFAULT_OPTIONS.n_d_skim_compensation = 0.0;
+ABF.DEFAULT_OPTIONS.n_d_received_reply = 20; // Also see r_d_received_reply
 // reply
-ABF.DEFAULT_OPTIONS.r_d_received_reply = 13; 
+ABF.DEFAULT_OPTIONS.r_d_received_reply = 15; 
 ABF.DEFAULT_OPTIONS.r_d_drop_off = -0.45; // Based on data, maybe make multiplier
 
 // Normally not changed

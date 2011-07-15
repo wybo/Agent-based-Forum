@@ -144,7 +144,7 @@ Post = (function() {
       if (this.thread.forum.options.mode == ABF.MODES.ordered) {
         context.fillText(this.rating, x, y);
       }
-      if (this.indent === 0) {
+      if (this.indent === 0 && this.thread.forum.options.mode != ABF.MODES.random) {
         context.fillText(this.thread.posts.length, x - 2, y - 10);
       }
     }
