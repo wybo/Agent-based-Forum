@@ -9,9 +9,10 @@ generations = 9600; // 40 days
 //generations = 3600; // 15 days
 //generations = 6;
 
+initial_actor_settings = [1, 2, 3, 4];
 //initial_actor_settings = [5, 10, 15, 20, 25, 35];
 //initial_actor_settings = [50, 100, 200];
-initial_actor_settings = [500, 1500, 5000];
+//initial_actor_settings = [500, 1500, 5000];
 
 note = "Testing large user-counts";
 

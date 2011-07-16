@@ -58,7 +58,7 @@ files.delete("include.js")
 files.push(files.delete("agent_based_forum.js")) # last
 important_parts = []
 files.each do |file_name|
-  highlight_file(file_name)
+  highlight_file(file_name, important_parts)
 end
 if PUBLISH_COMMAND
   puts PUBLISH_COMMAND
