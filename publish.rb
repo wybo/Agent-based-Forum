@@ -8,7 +8,7 @@ else
 end
 PUBLISH_COMMAND ||= nil
 
-def highlight_file(file_name)
+def highlight_file(file_name, important_parts)
   system "vim #{file_name} -c 'runtime! syntax/2html.vim | wq | q'"
   lines = open("#{file_name}.html").readlines
   open_div = false
