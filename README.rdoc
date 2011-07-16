@@ -16,7 +16,7 @@ Still under heavy development. Ideas, comments and feedback welcome
 == Usage
 
 {Open using Firefox or Google
-Chrome}[http://wybowiersma.net/pub/agent-based-forum/] and click 'Start Simulation'.
+Chrome}[http://wybowiersma.net/agent-based-forum] and click 'Start Simulation'.
 
 Comes with instructions.
 

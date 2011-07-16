@@ -11,8 +11,8 @@ ABF.DEFAULT_OPTIONS = {};
 
 // Initialization
 ABF.DEFAULT_OPTIONS.initial_actors = 100;
-ABF.DEFAULT_OPTIONS.initial_threads = 40; // Seed threads
-ABF.DEFAULT_OPTIONS.max_threads = 40; // threads dropped after this
+ABF.DEFAULT_OPTIONS.initial_threads = 20; // Seed threads
+ABF.DEFAULT_OPTIONS.max_threads = 20; // threads dropped after this
 ABF.DEFAULT_OPTIONS.mode = ABF.MODES.ordered;
 
 // Chances 
@@ -35,13 +35,13 @@ ABF.DEFAULT_OPTIONS.c_d_page_load = -0.2;
 ABF.DEFAULT_OPTIONS.c_d_skim = 0.0;
 ABF.DEFAULT_OPTIONS.c_d_nothing_left = -10; // Substracted from any remaining that is carried over
 // next
-ABF.DEFAULT_OPTIONS.n_d_on_topic = 1.5; // 2.3
+ABF.DEFAULT_OPTIONS.n_d_on_topic = 1.7; // 2.3
 ABF.DEFAULT_OPTIONS.n_d_off_topic = 0.5; // -0.5
 ABF.DEFAULT_OPTIONS.n_d_skim_compensation = 0.0;
-ABF.DEFAULT_OPTIONS.n_d_received_reply = 20; // Also see r_d_received_reply
+ABF.DEFAULT_OPTIONS.n_d_received_reply = 17.5; // Also see r_d_received_reply
 // reply
-ABF.DEFAULT_OPTIONS.r_d_received_reply = 15; 
-ABF.DEFAULT_OPTIONS.r_d_drop_off = -0.45; // Based on data, maybe make multiplier
+ABF.DEFAULT_OPTIONS.r_d_received_reply = 17.5; 
+ABF.DEFAULT_OPTIONS.r_d_drop_off = -0.58; // Based on data, maybe make multiplier
 
 // Normally not changed
 ABF.DEFAULT_OPTIONS.direction = ABF.DIRECTIONS.newold; // new threads shown first

@@ -112,7 +112,7 @@ plot_experiment = function() {
 };
 
 plot_test = function(test, index) {
-  var keys = ["unique_posters", "users", "arrivals_leavers", "posts", "threads"],
+  var keys = ["unique_posters", "users", "arrivals_leavers", "posts", "threads", "topics"],
       k,
       div,
       space,
