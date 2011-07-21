@@ -2,19 +2,23 @@ $ = {};
 $.include = load;
 $.include('agent_based_forum.js');
 
-reruns = 20; // To average it out
+reruns = 100; // To average it out
+//reruns = 20; // To average it out
 //reruns = 2; // To average it out
 
-generations = 9600; // 40 days
+generations = 87600; // 365 days
+//generations = 9600; // 40 days
 //generations = 3600; // 15 days
 //generations = 6;
 
-initial_actor_settings = [1, 2, 3, 4];
-//initial_actor_settings = [5, 10, 15, 20, 25, 35];
-//initial_actor_settings = [50, 100, 200];
-//initial_actor_settings = [500, 1500, 5000];
+initial_actor_or_arrivals_settings = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50];
+//initial_actor_or_arrivals_settings = [2, 3, 4, 5, 10, 20];
+//initial_actor_or_arrivals_settings = [5, 10, 15, 20, 25, 35];
+//initial_actor_or_arrivals_settings = [50, 100, 200];
+//initial_actor_or_arrivals_settings = [500, 1500, 5000];
 
-note = "Testing large user-counts";
+
+note = "Actors no longer bumped off the page if thread disappears";
 
 tests = [
       {
@@ -33,21 +37,26 @@ tests = [
 
 cycle_output = [];
 
-prepare_tests = function(tests, initial_actor_settings, note) {
+prepare_tests = function(tests, initial_actor_or_arrivals_settings, note) {
   var new_tests = [],
       i,
       j,
+      k,
       property,
       n = 0;
   for (i = 0; i < tests.length; i++) {
-    for (j = 0; j < initial_actor_settings.length; j++) {
+    for (j = 0; j < initial_actor_or_arrivals_settings.length; j++) {
       new_tests[n] = {};
       for (property in tests[i]) {
         if (tests[i].hasOwnProperty(property)) {
           new_tests[n][property] = tests[i][property];
         }
       }
-      new_tests[n].initial_actors = initial_actor_settings[j];
+      if (ABF.DEFAULT_OPTIONS.with_thresholds) {
+        new_tests[n].daily_arrivals = initial_actor_or_arrivals_settings[j];
+      } else {
+        new_tests[n].initial_actors = initial_actor_or_arrivals_settings[j];
+      }
       new_tests[n].note = note;
       n++;
     }
@@ -64,8 +73,9 @@ prepare_tests = function(tests, initial_actor_settings, note) {
 
 experimenter = function(options) {
   var forum,
-      averaged_plot_hash = {data: {}},
-      plot_hash,
+      averaged_hash = {data: {critical_mass_days_all: []}},
+      hash,
+      critical_mass_reached_times = 0,
       r,
       s,
       i;
@@ -74,33 +84,50 @@ experimenter = function(options) {
     for (i = 0; i < generations; i++) {
       forum.run();
     }
-    plot_hash = forum.plot_data();
-    if (!averaged_plot_hash.config) {
-      averaged_plot_hash.config = plot_hash.config;
+    hash = forum.data();
+    if (!averaged_hash.config) {
+      averaged_hash.config = hash.config;
     }
-    for (var property in plot_hash.data) {
-      if (plot_hash.data.hasOwnProperty(property)) {
-        if (!averaged_plot_hash.data[property]) {
-          averaged_plot_hash.data[property] = [];
-        }
-        for (s = 0; s < plot_hash.data[property].length; s++) {
-          if (!averaged_plot_hash.data[property][s]) {
-            averaged_plot_hash.data[property][s] = [];
+    averaged_hash.data.critical_mass_days_all.push(hash.data.critical_mass_days);
+    for (var property in hash.data) {
+      if (hash.data.hasOwnProperty(property)) {
+        if (property == "critical_mass_days") {
+          if (!averaged_hash.data[property]) {
+            averaged_hash.data[property] = 0;
           }
-          for (i = 0; i < plot_hash.data[property][s].length; i++) {
-            if (!averaged_plot_hash.data[property][s][i]) {
-              averaged_plot_hash.data[property][s][i] = [plot_hash.data[property][s][i][0], 0];
+          if (hash.data[property] >= 0) {
+            averaged_hash.data[property] += (hash.data[property] * 1.0);
+            critical_mass_reached_times++;
+          }
+        } else {
+          if (!averaged_hash.data[property]) {
+            averaged_hash.data[property] = [];
+          }
+          for (s = 0; s < hash.data[property].length; s++) {
+            if (!averaged_hash.data[property][s]) {
+              averaged_hash.data[property][s] = [];
             }
-            averaged_plot_hash.data[property][s][i][1] += ((plot_hash.data[property][s][i][1] * 1.0) / reruns);
+            for (i = 0; i < hash.data[property][s].length; i++) {
+              if (!averaged_hash.data[property][s][i]) {
+                averaged_hash.data[property][s][i] = [hash.data[property][s][i][0], 0];
+              }
+              averaged_hash.data[property][s][i][1] += ((hash.data[property][s][i][1] * 1.0) / reruns);
+            }
           }
         }
       }
     }
   }
-  print(JSON.stringify(averaged_plot_hash));
+  if (averaged_hash.data.critical_mass_days) {
+    averaged_hash.data.critical_mass_days = (averaged_hash.data.critical_mass_days * 1.0) / 
+        critical_mass_reached_times;
+    averaged_hash.data.critical_mass_reached_fraction = (critical_mass_reached_times * 1.0) /
+        reruns;
+  }
+  print(JSON.stringify(averaged_hash));
 };
 
-tests = prepare_tests(tests, initial_actor_settings, note);
+tests = prepare_tests(tests, initial_actor_or_arrivals_settings, note);
 
 print("[");
 for (var c_i = 0; c_i < tests.length; c_i++) {

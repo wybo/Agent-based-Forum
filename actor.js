@@ -10,12 +10,17 @@ Actor = (function() {
     this.forum = forum;
     this.id = this.forum.actors_id_counter++;
     /// Agent attributes
+    if (this.forum.options.with_thresholds) {
+      this.threshold = this.forum.options.threshold_average +
+          normal_rand()[0] * this.forum.options.threshold_standard_deviation;
+    }
     // Will be removed if true
     this.left_forum = false;
     // The position, false if offline
     this.position = (options.position ? options.position : false);
     this.next_desire = 0;
-    this.current_desire = this.forum.options.c_d_leave_cutoff + Math.floor(Math.random() * (this.forum.options.c_d_max_starting));
+    this.current_desire = this.forum.options.c_d_leave_cutoff + 
+        Math.floor(Math.random() * (this.forum.options.c_d_max_starting));
     this.reply_desire = 0;
     this.topic = ABF.random_action(ABF.TOPIC_ACTIONS);
     this.actions = [];
@@ -55,6 +60,8 @@ Actor = (function() {
     ///
   };
 
+  //### Runs
+
   /// Agent rate and objective functions
   construct.prototype.run = function() {
     if (this.position === false) { // is offline, rate function
@@ -69,7 +76,7 @@ Actor = (function() {
       }
     } else { // is visiting forum, objective function
       // this.own_post_bonus() could be added;
-      if (this.current_desire < this.forum.options.c_d_offline_cutoff) { // no desire left, leave
+      if (this.current_desire < 0) { // no desire left, leave
         this.go_offline();
       } else {
         //ABF.random_action(this.actions, {boost: [0, this.current_desire + this.reply_desire]});
@@ -126,8 +133,6 @@ Actor = (function() {
   };
 
   construct.prototype.skim_post = function(post) {
-    this.current_desire += this.forum.options.c_d_skim; // lose desire
-    this.next_desire += this.forum.options.n_d_skim_compensation; // regain for next
     this.reading = false;
   };
 
@@ -137,21 +142,19 @@ Actor = (function() {
     }
   };
 
+  //### Actions
+
   construct.prototype.to_next_post = function() {
     var old_post = this.post(),
         post;
-//    do {
       // Passes by comments to uninteresting posts (for free)
-      if (old_post.topic == this.topic || this.forum.options.mode == ABF.MODES.threaded || ABF.fifty_fifty()) {
-//      if (old_post.topic == this.topic || this.forum.options.mode == ABF.MODES.threaded) {
-        post = old_post.next();
-      } else {
-        post = old_post.next(old_post.indent);
-      }
-      old_post = post;
-      // Passes posts that have been seen (for free), 
-      // unless commented below
-//    } while (post && post.seen[this.id] && !post.posted_in[this.id]);
+    if (old_post.topic == this.topic || this.forum.options.mode == ABF.MODES.threaded || ABF.fifty_fifty()) {
+//    if (old_post.topic == this.topic || this.forum.options.mode == ABF.MODES.threaded) {
+      post = old_post.next();
+    } else {
+      post = old_post.next(old_post.indent);
+    }
+    old_post = post;
     if (post) {
       this.position = post.id;
     } else {
@@ -162,7 +165,6 @@ Actor = (function() {
   construct.prototype.to_next_thread = function() {
     var thread = this.post().thread,
         pass;
-    this.seen_uninteresting_in_thread = 0;
     do {
       thread = thread.next();
       pass = false;
@@ -180,33 +182,26 @@ Actor = (function() {
       }
     } while (pass);
     if (thread) {
-      this.position = thread.posts[0].id;
-      this.current_desire += this.forum.options.c_d_page_load; // Cognitive load / loading time
-    } else if (this.seen_new_thread_since_top) {
-      this.to_top_of_page();
+      this.set_thread(thread);
     } else {
-      this.go_offline();
+      this.drop_off_page(thread);
     }
   };
 
   construct.prototype.to_reply = function() {
     var old_post = this.post();
     var post = old_post.reply(this, ABF.random_action(ABF.TOPIC_ACTIONS, [[old_post.thread.posts[0].topic, 0.5]], old_post.topic));
-//    var post = old_post.reply(this, ABF.random_action(ABF.TOPIC_ACTIONS, {swap: old_post.topic}));
     this.position = post.id;
     this.current_desire += this.forum.options.c_d_create;
   };
 
   construct.prototype.to_new_thread = function() {
     var thread = this.post().thread.new_thread(this, ABF.random_action(ABF.TOPIC_ACTIONS, false, this.topic));
-    this.position = thread.posts[0].id;
+    this.set_thread(thread);
     this.current_desire += this.forum.options.c_d_create;
   };
 
-  construct.prototype.post = function() {
-    var position_hash = this.forum.positions_hash[this.position];
-    return this.forum.threads[position_hash.thread].posts[position_hash.post];
-  };
+  //### Movement
 
   construct.prototype.go_online = function() {
     this.to_top_of_page();
@@ -219,6 +214,14 @@ Actor = (function() {
       this.position = this.forum.threads[this.forum.threads.length - 1].posts[0].id;
     }
     this.seen_new_thread_since_top = false;
+  };
+
+  construct.prototype.drop_off_page = function() {
+    if (this.seen_new_thread_since_top) {
+      this.to_top_of_page();
+    } else {
+      this.go_offline();
+    }
   };
 
   construct.prototype.go_offline = function() {
@@ -234,6 +237,21 @@ Actor = (function() {
     this.forum.users_count--;
     this.forum.users_per_topic_count[this.topic]--;
   };
+
+  //### Getters and setters
+
+  construct.prototype.set_thread = function(thread) {
+    this.seen_uninteresting_in_thread = 0;
+    this.position = thread.posts[0].id;
+    this.current_desire += this.forum.options.c_d_page_load; // Cognitive load / loading time
+  };
+
+  construct.prototype.post = function() {
+    var position_hash = this.forum.positions_hash[this.position];
+    return this.forum.threads[position_hash.thread].posts[position_hash.post];
+  };
+
+  //### Display
 
   construct.prototype.draw = function(x, y) {
     var context = this.forum.context;

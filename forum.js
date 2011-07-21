@@ -29,19 +29,24 @@ Forum = (function() {
         i,
         j,
         seed_thread,
-        init_array = [],
-        initial_offline_actors;
+        seed_single,
+        init_array = [];
 
+    this.actors = [];
     this.actors_id_counter = 0; // only goes up, only for id's
     this.posts_id_counter = 0; // also for counting
     this.run_count = 0;
     this.users_count = 0;
     this.users_per_topic_count = [];
-    this.daily_unique_posters_count = 0;
+
     this.daily_arrivals_remainder = 0;
-    this.daily_arrivals_count = 0;
-    this.daily_leavers_count = 0;
     this.threads_count = 0;
+    this.reset_daily_counts();
+
+    if (this.options.with_thresholds) {
+      this.critical_mass_days = -1;
+      this.locked = false;
+    }
 
     this.plot_users = [];
     this.plot_daily_unique_posters = [];
@@ -53,8 +58,6 @@ Forum = (function() {
     for (i = 0; i < 4; i++) {
       this.plot_topics[i] = [];
     }
-
-    this.daily_unique_posters_hash = [];
 
     this.positions_hash = {};
     this.threads = [];
@@ -75,8 +78,15 @@ Forum = (function() {
         {indent: 3},
         {indent: 3}
       ];
-    for (i = 0; i < this.options.initial_threads; i++) {
-      init_array.push(seed_thread);
+    seed_single = [
+        {indent: 0}
+      ];
+    if (this.options.initial_threads < 1) {
+      init_array.push(seed_single);
+    } else {
+      for (i = 0; i < this.options.initial_threads; i++) {
+        init_array.push(seed_thread);
+      }
     }
     if (this.options.mode == ABF.MODES.random) {
       new_array = [];
@@ -97,16 +107,12 @@ Forum = (function() {
       }
     }
     this.append_threads(init_array);
-    this.reset_daily_unique_posters();
+    this.reset_daily_counts();
     
-    this.actors = [
-        new Actor({position: 1}, this)
-      ];
-    initial_offline_actors = this.options.initial_actors - this.actors.length;
-    for (i = 0; i < initial_offline_actors; i++) {
+    for (i = 0; i < this.options.initial_actors; i++) {
       this.actors.push(new Actor({}, this));
     }
-    this.set_post_actors();
+    this.prune_actors_and_add_to_posts();
     if (this.canvas) {
       this.draw();
       this.replot();
@@ -117,28 +123,30 @@ Forum = (function() {
     var new_visitors,
         changed_positions = false,
         i;
-    for (i = 0; i < this.actors.length; i++) {
-      this.actors[i].run();
-      if (this.actors[i].left_forum) {
-        this.actors.splice(i, 1);
-        this.daily_leavers_count++;
-        i--;
+    if (!this.options.with_thresholds || !this.locked) {
+      for (i = 0; i < this.actors.length; i++) {
+        this.actors[i].run();
+        if (this.actors[i].left_forum) {
+          this.actors.splice(i, 1);
+          this.daily_leavers_count++;
+          i--;
+        }
       }
-    }
-    if (this.options.mode != ABF.MODES.random) {
-      this.prune_threads();
-      changed_positions = true;
-    }
-    if (this.options.mode == ABF.MODES.ordered) {
-      this.reorder_threads();
-      changed_positions = true;
-    }
-    if (changed_positions) {
-      this.redo_positions_hash();
-    }
-    this.set_post_actors();
-    if (this.run_count > 1 && this.run_count % 240 === 0) {
-      this.add_actors();
+      if (this.options.mode != ABF.MODES.random) {
+        this.prune_threads();
+        changed_positions = true;
+      }
+      if (this.options.mode == ABF.MODES.ordered) {
+        this.reorder_threads();
+        changed_positions = true;
+      }
+      if (changed_positions) {
+        this.redo_positions_hash();
+      }
+      if (this.run_count % 240 === 0) {
+        this.add_actors();
+      }
+      this.prune_actors_and_add_to_posts();
     }
     this.run_plot_data(); // Resets daily_unique_posters_count
     if (this.canvas) {
@@ -197,14 +205,24 @@ Forum = (function() {
   };
 
   construct.prototype.add_actors = function() {
-    this.daily_arrivals_remainder = this.daily_arrivals_remainder + 
-        this.daily_unique_posters_count * this.options.daily_arrivals_fraction;
-    this.daily_arrivals_count = 0;
-    for (i = 0; i < this.daily_arrivals_remainder; i++) {
-      this.actors.push(new Actor({}, this));
-      this.daily_arrivals_count++;
+    var i;
+    if (this.options.with_thresholds) {
+      for (i = 0; i < this.options.daily_arrivals; i++) {
+        this.actors.push(new Actor({}, this));
+      } // Pruned again if uniques is under their threshold
+      if (this.critical_mass_days == -1 && this.daily_unique_posters_count > this.options.threshold_average) {
+        this.critical_mass_days = (this.run_count * 1.0) / 240;
+        this.locked = true;
+      }
+    } else if (this.run_count > 1) {
+      this.daily_arrivals_remainder = this.daily_arrivals_remainder + 
+          this.daily_unique_posters_count * this.options.daily_arrivals_fraction;
+      for (i = 0; i < this.daily_arrivals_remainder; i++) {
+        this.actors.push(new Actor({}, this));
+        this.daily_arrivals_count++;
+      }
+      this.daily_arrivals_remainder = this.daily_arrivals_remainder - this.daily_arrivals_count;
     }
-    this.daily_arrivals_remainder = this.daily_arrivals_remainder - this.daily_arrivals_count;
   };
 
   construct.prototype.prune_threads = function() {
@@ -231,7 +249,8 @@ Forum = (function() {
   };
 
   construct.prototype.redo_positions_hash = function() {
-    var i,
+    var position_hash,
+        i,
         j;
     for (i = 0; i < this.threads.length; i++) {
       for (j = 0; j < this.threads[i].posts.length; j++) {
@@ -242,22 +261,29 @@ Forum = (function() {
     }
   };
 
-  construct.prototype.set_post_actors = function() {
-    var position_hash;
-    for (var i = 0; i < this.actors.length; i++) {
+  construct.prototype.prune_actors_and_add_to_posts = function() {
+    var position_hash,
+        i;
+    if (this.options.with_thresholds) {
+      for (i = 0; i < this.actors.length; i++) {
+        if (this.actors[i].threshold > this.daily_unique_posters_count) {
+          this.actors[i].leave_forum();
+        }
+      }
+    }
+    for (i = 0; i < this.actors.length; i++) {
       if (this.actors[i].position !== false) {
         position_hash = this.positions_hash[this.actors[i].position];
         if (position_hash !== undefined) {
           this.threads[position_hash.thread].posts[position_hash.post].actor = this.actors[i];
         } else {
-          this.actors[i].go_offline(); // thread is gone
+          this.actors[i].drop_off_page(); // thread is gone
         }
       }
     }
   };
 
   construct.prototype.draw = function() {
-    var position_hash;
     this.canvas.width = this.canvas.width;
     if (this.options.direction == ABF.DIRECTIONS.oldnew) {
       for (i = 0; i < this.threads.length; i++) {
@@ -292,8 +318,7 @@ Forum = (function() {
       this.plot_daily_unique_posters.push([this.run_count, this.daily_unique_posters_count]);
       this.plot_daily_arrivals.push([this.run_count, this.daily_arrivals_count]);
       this.plot_daily_leavers.push([this.run_count, this.daily_leavers_count]);
-      this.daily_leavers_count = 0;
-      this.reset_daily_unique_posters();
+      this.reset_daily_counts();
     }
   };
 
@@ -316,7 +341,7 @@ Forum = (function() {
     this.plotter.draw();
   };
 
-  construct.prototype.plot_data = function() {
+  construct.prototype.data = function() {
     return {
         config: this.options, 
         data: {
@@ -325,13 +350,18 @@ Forum = (function() {
             arrivals_leavers: [this.plot_daily_arrivals, this.plot_daily_leavers],
             posts: [this.plot_posts],
             threads: [this.plot_threads],
-            topics: this.plot_topics
+            topics: this.plot_topics,
+            critical_mass_days: this.critical_mass_days
         }};
   };
 
-  construct.prototype.reset_daily_unique_posters = function() {
-    this.daily_unique_posters_count = 0;
-    this.daily_unique_posters_hash = {};
+  construct.prototype.reset_daily_counts = function() {
+    if (!this.options.with_thresholds || !this.locked) {
+      this.daily_unique_posters_count = 0;
+      this.daily_unique_posters_hash = {};
+      this.daily_arrivals_count = 0;
+      this.daily_leavers_count = 0;
+    }
   };
 
   return construct;

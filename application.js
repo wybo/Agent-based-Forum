@@ -37,7 +37,7 @@ display_config = function(content_space, config) {
 _display_config = function(div, config) {
   div.html('<p>Mode: ' + MODE_STRINGS[config.mode] + ', Initial: ' + config.initial_actors +
       ', -threads: ' + config.initial_threads + ', Max threads: ' + config.max_threads + 
-      ', Daily arrivals fr: ' + config.daily_arrivals_fraction + 
+      ', Daily arrivals: ' + (config.with_thresholds ? config.daily_arrivals : config.daily_arrivals_fraction) + 
       ', Chance-reply: ' + config.reply_chance + ', -new-thread: ' + config.new_thread_chance + 
       ', -next-thread: ' + config.next_thread_chance + 
       ', Topic power: ' + config.topic_power + 
@@ -57,12 +57,12 @@ _display_costs_benefits = function(div, config) {
   div2.html('<p>' +  
     'Current<br />' +
     'c_d_max_starting = ' + config.c_d_max_starting + '<br />' +
+    'c_d_leave_cutoff = ' + config.c_d_leave_cutoff + '<br />' +
     'c_d_read = ' + config.c_d_read + '<br />' +
     'c_d_create = ' + config.c_d_create + '<br />' +
     'c_d_page_load = ' + config.c_d_page_load + '<br />' +
     'c_d_offline_cutoff = ' + config.c_d_offline_cutoff + '<br />' +
     'c_d_nothing_left = ' + config.c_d_nothing_left + '<br />' +
-    'c_d_leave_cutoff = ' + config.c_d_leave_cutoff + '<br />' +
     'Next<br />' +
     'n_d_on_topic = ' + config.n_d_on_topic + '<br />' +
     'n_d_off_topic = ' + config.n_d_off_topic + '<br />' +
@@ -70,7 +70,12 @@ _display_costs_benefits = function(div, config) {
     'Reply<br />' +
     'r_d_received_reply = ' + config.r_d_received_reply + '<br />' +
     'r_d_drop_off = ' + config.r_d_drop_off + '<br />' +
-    'Old<br />' +
+    '<br />Thresholds<br />' +
+    'with_thresholds = ' + config.with_thresholds + '<br />' +
+    'threshold_average = ' + config.threshold_average + '<br />' +
+    'threshold_standard_deviation = ' + config.threshold_standard_deviation + '<br />' +
+    'threshold_daily_arrivals = ' + config.daily_arrivals + '<br />' +
+    '<br />Old<br />' +
     'c_d_received_reply = ' + config.c_d_received_reply + '<br />' +
     'c_d_skim = ' + config.c_d_skim + '<br />' +
     'n_d_skim_compensation = ' + config.n_d_skim_compensation + '<br />' +
@@ -124,6 +129,10 @@ plot_test = function(test, index) {
   div2 = $('<div>').css({'float' : 'left', 'clear' : 'left'});
   div.append(div2);
   _display_config(div2, test.config);
+  if (test.config.with_thresholds) {
+    div2.append('<p>Time until critical mass: ' + test.data.critical_mass_days +
+        ', achieved in fraction of cases: ' + test.data.critical_mass_reached_fraction + '</p>');
+  }
   div2 = $('<div>').css({'float' : 'left', 'clear' : 'left'});
   div.append(div2);
   for (i = 0; i < keys.length; i++) {
