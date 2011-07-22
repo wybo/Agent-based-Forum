@@ -83,17 +83,14 @@ Actor = (function() {
       } else {
         post = this.post();
         if (this.seen_reply_from_in_session[post.author_id]) {
-          reply_boost = this.current_desire * 3.0;
+          reply_boost = this.reply_desire * 3.0;
         } else {
-          reply_boost = this.current_desire * 1.0;
-        }
-        if (this.current_desire > 100) {
-          alert(reply_boost + ' ' + this.seen_uninteresting_in_thread);
+          reply_boost = this.reply_desire * 1.0;
         }
         //ABF.random_action(this.actions, {boost: [0, this.current_desire + this.reply_desire]});
         ABF.random_action(this.actions, // both reply_ and seen_uninteresting here for boost implementation reasons
             [[0, (reply_boost + this.seen_uninteresting_in_thread) / this.actions.total],
-             [2, (reply_boost / 20) / this.actions.total]]);
+             [1, (this.seen_uninteresting_in_thread) / this.actions.total]]);
         if (this.position !== false) {
           this.read_post(post);
         }
@@ -110,7 +107,7 @@ Actor = (function() {
   
   construct.prototype.read_post = function(post) {
     var parent_post = post.previous(post.indent - 1);
-    if (post.seen[this.id] || post.author_id == this.id) {
+    if (post.seen[this.id]) {
       this.skim_post(post); 
     } else {
       if (post.indent === 0 && this.forum.options.mode != ABF.MODES.random) { // a thread
@@ -130,7 +127,7 @@ Actor = (function() {
         this.seen_uninteresting_in_thread++;
       }
       if (parent_post && parent_post.author_id == this.id) {
-        this.current_desire += this.forum.options.n_d_received_reply;
+        this.next_desire += this.forum.options.n_d_received_reply;
         this.reply_desire += this.forum.options.r_d_received_reply;
       }
       post.seen[this.id] = true;
@@ -237,9 +234,8 @@ Actor = (function() {
   };
 
   construct.prototype.go_offline = function() {
-    this.current_desire = this.next_desire;
-//    this.current_desire += this.forum.options.c_d_nothing_left; // Empty forum, frustration
-//    this.current_desire = this.next_desire + Math.max(0, this.current_desire); // If any is left
+    this.current_desire += this.forum.options.c_d_nothing_left; // Empty forum, frustration
+    this.current_desire = this.next_desire + Math.max(0, this.current_desire); // If any is left
     this.next_desire = 0;
     this.seen_thread_in_session = {};
     this.seen_reply_from_in_session = {};
