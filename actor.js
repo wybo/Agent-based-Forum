@@ -49,8 +49,9 @@ Actor = (function() {
     }
     this.actions = ABF.prepare_actions(this.actions, {bind: this});
     this.reading = true;
-    this.seen_uninteresting_in_thread = 0;
     this.seen_thread_in_session = {};
+    this.seen_reply_from_in_session = {};
+    this.seen_uninteresting_in_thread = 0;
     this.forum.users_count++;
     if (!this.forum.users_per_topic_count[this.topic]) {
       this.forum.users_per_topic_count[this.topic] = 0;
@@ -64,6 +65,7 @@ Actor = (function() {
 
   /// Agent rate and objective functions
   construct.prototype.run = function() {
+    var reply_boost;
     if (this.position === false) { // is offline, rate function
       if (this.current_desire < this.forum.options.c_d_leave_cutoff) {
         this.leave_forum();
@@ -71,7 +73,7 @@ Actor = (function() {
         var roll = Math.floor(Math.random()*1001);
         if (this.current_desire / this.forum.options.desire_for_online_divider > roll) { // if desire greater than roll
           this.go_online();
-          this.read_current_post();
+          this.read_post(this.post());
         }
       }
     } else { // is visiting forum, objective function
@@ -79,12 +81,21 @@ Actor = (function() {
       if (this.current_desire < 0) { // no desire left, leave
         this.go_offline();
       } else {
+        post = this.post();
+        if (this.seen_reply_from_in_session[post.author_id]) {
+          reply_boost = this.current_desire * 3.0;
+        } else {
+          reply_boost = this.current_desire * 1.0;
+        }
+        if (this.current_desire > 100) {
+          alert(reply_boost + ' ' + this.seen_uninteresting_in_thread);
+        }
         //ABF.random_action(this.actions, {boost: [0, this.current_desire + this.reply_desire]});
         ABF.random_action(this.actions, // both reply_ and seen_uninteresting here for boost implementation reasons
-            [[0, (this.reply_desire + this.seen_uninteresting_in_thread) / actions.total],
-             [1, (this.seen_uninteresting_in_thread) / actions.total]]);
+            [[0, (reply_boost + this.seen_uninteresting_in_thread) / this.actions.total],
+             [2, (reply_boost / 20) / this.actions.total]]);
         if (this.position !== false) {
-          this.read_current_post();
+          this.read_post(post);
         }
       }
       // reduce reply desire with time
@@ -97,10 +108,9 @@ Actor = (function() {
   };
   ///
   
-  construct.prototype.read_current_post = function() {
-    var post = this.post(),
-        parent_post = post.previous(post.indent - 1);
-    if (post.seen[this.id]) {
+  construct.prototype.read_post = function(post) {
+    var parent_post = post.previous(post.indent - 1);
+    if (post.seen[this.id] || post.author_id == this.id) {
       this.skim_post(post); 
     } else {
       if (post.indent === 0 && this.forum.options.mode != ABF.MODES.random) { // a thread
@@ -120,10 +130,13 @@ Actor = (function() {
         this.seen_uninteresting_in_thread++;
       }
       if (parent_post && parent_post.author_id == this.id) {
-        this.next_desire += this.forum.options.n_d_received_reply;
+        this.current_desire += this.forum.options.n_d_received_reply;
         this.reply_desire += this.forum.options.r_d_received_reply;
       }
       post.seen[this.id] = true;
+    }
+    if (parent_post && parent_post.author_id == this.id) {
+      this.seen_reply_from_in_session[post.author_id] = true;
     }
     if (post.indent === 0 && !this.seen_thread_in_session[post.id] &&
         this.forum.options.mode != ABF.MODES.random) { // a thread
@@ -147,9 +160,8 @@ Actor = (function() {
   construct.prototype.to_next_post = function() {
     var old_post = this.post(),
         post;
-      // Passes by comments to uninteresting posts (for free)
+    // Passes by comments to uninteresting posts (for free)
     if (old_post.topic == this.topic || this.forum.options.mode == ABF.MODES.threaded || ABF.fifty_fifty()) {
-//    if (old_post.topic == this.topic || this.forum.options.mode == ABF.MODES.threaded) {
       post = old_post.next();
     } else {
       post = old_post.next(old_post.indent);
@@ -225,10 +237,12 @@ Actor = (function() {
   };
 
   construct.prototype.go_offline = function() {
-    this.current_desire += this.forum.options.c_d_nothing_left; // Empty forum, frustration
-    this.current_desire = this.next_desire + Math.max(0, this.current_desire); // If any is left
+    this.current_desire = this.next_desire;
+//    this.current_desire += this.forum.options.c_d_nothing_left; // Empty forum, frustration
+//    this.current_desire = this.next_desire + Math.max(0, this.current_desire); // If any is left
     this.next_desire = 0;
     this.seen_thread_in_session = {};
+    this.seen_reply_from_in_session = {};
     this.position = false;
   };
 

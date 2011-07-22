@@ -54,7 +54,7 @@ ABF.random_action = function(actions, boosts, swap) {
   if (boosts) {
     roll = Math.random() * (1.0 + boosts[0][1]);
     if (roll >= 1) {
-      if (boosts[1] && boosts[1][1] < roll - 1) {
+      if (boosts[1] && boosts[1][1] > roll - 1) {
         return actions.actions[boosts[1][0]].action();
       } else {
         return actions.actions[boosts[0][0]].action();
@@ -93,14 +93,15 @@ ABF.fifty_fifty = function() {
 };
 
 ABF.topic_actions = function(topics) {
-  actions = [];
-  for (var i = topics - 1; i >= 0; i--) {
+  var actions = [],
+      i;
+  for (i = 0; i < topics; i++) {
     actions.push({
-      chance: Math.pow(ABF.DEFAULT_OPTIONS.topic_power, i),
-      action: ABF.arg_returning_function(topics - i - 1) });
+      chance: 1.0 / (i + 1),
+//      chance: 1.0 / Math.pow((i + 1), 1.25),
+      action: ABF.arg_returning_function(i) });
   }
-  actions = ABF.prepare_actions(actions);
-  return actions;
+  return ABF.prepare_actions(actions);
 };
 
 ABF.topic_colors = function(topics) {
@@ -145,20 +146,20 @@ ABF.hn_weight = function(rating, time) {
 // Randomization / normal distributions
 
 function normal_rand() { // standard normal distribution numbers using Box-Muller transformation
-    var x = 0, y = 0, rds, c;
+  var x = 0, y = 0, rds, c;
 
-    // Get two random numbers from -1 to 1
-    // If the radius is zero or greater than 1, throw them out and pick two new ones
-    // Throws away about 20% of the pairs
-    do {
-      x = Math.random()*2-1;
-      y = Math.random()*2-1;
-      rds = x*x + y*y;
-    } while (rds === 0 || rds > 1);
+  // Get two random numbers from -1 to 1
+  // If the radius is zero or greater than 1, throw them out and pick two new ones
+  // Throws away about 20% of the pairs
+  do {
+    x = Math.random()*2-1;
+    y = Math.random()*2-1;
+    rds = x*x + y*y;
+  } while (rds === 0 || rds > 1);
 
-    // This is the Box-Muller Transform
-    c = Math.sqrt(-2*Math.log(rds)/rds);
+  // This is the Box-Muller Transform
+  c = Math.sqrt(-2*Math.log(rds)/rds);
 
-    // It always creates a pair of numbers
-    return [x*c, y*c];
+  // It always creates a pair of numbers
+  return [x*c, y*c];
 }

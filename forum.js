@@ -78,9 +78,7 @@ Forum = (function() {
         {indent: 3},
         {indent: 3}
       ];
-    seed_single = [
-        {indent: 0}
-      ];
+    seed_single = [seed_thread[0]];
     if (this.options.initial_threads < 1) {
       init_array.push(seed_single);
     } else {

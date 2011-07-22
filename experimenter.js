@@ -2,23 +2,23 @@ $ = {};
 $.include = load;
 $.include('agent_based_forum.js');
 
-reruns = 100; // To average it out
+//reruns = 100; // To average it out
 //reruns = 20; // To average it out
-//reruns = 2; // To average it out
+reruns = 2; // To average it out
 
-generations = 87600; // 365 days
+//generations = 87600; // 365 days
 //generations = 9600; // 40 days
-//generations = 3600; // 15 days
+generations = 3600; // 15 days
 //generations = 6;
 
-initial_actor_or_arrivals_settings = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50];
+//initial_actor_or_arrivals_settings = [10, 20, 30, 40, 50];
 //initial_actor_or_arrivals_settings = [2, 3, 4, 5, 10, 20];
 //initial_actor_or_arrivals_settings = [5, 10, 15, 20, 25, 35];
-//initial_actor_or_arrivals_settings = [50, 100, 200];
+initial_actor_or_arrivals_settings = [50, 100, 200];
 //initial_actor_or_arrivals_settings = [500, 1500, 5000];
 
 
-note = "Actors no longer bumped off the page if thread disappears";
+note = "Zipfs topics, reciprocity added";
 
 tests = [
       {
@@ -76,6 +76,7 @@ experimenter = function(options) {
       averaged_hash = {data: {critical_mass_days_all: []}},
       hash,
       critical_mass_reached_times = 0,
+      property,
       r,
       s,
       i;
@@ -89,7 +90,7 @@ experimenter = function(options) {
       averaged_hash.config = hash.config;
     }
     averaged_hash.data.critical_mass_days_all.push(hash.data.critical_mass_days);
-    for (var property in hash.data) {
+    for (property in hash.data) {
       if (hash.data.hasOwnProperty(property)) {
         if (property == "critical_mass_days") {
           if (!averaged_hash.data[property]) {
@@ -113,6 +114,17 @@ experimenter = function(options) {
               }
               averaged_hash.data[property][s][i][1] += ((hash.data[property][s][i][1] * 1.0) / reruns);
             }
+          }
+        }
+      }
+    }
+  }
+  for (property in averaged_hash.data) {
+    if (hash.data.hasOwnProperty(property)) {
+      if (property != "critical_mass_days" && property != "critical_mass_days_all") {
+        for (s = 0; s < hash.data[property].length; s++) {
+          for (i = 0; i < hash.data[property][s].length; i++) {
+            averaged_hash.data[property][s][i][1] = Math.round(averaged_hash.data[property][s][i][1] * 100) / 100;
           }
         }
       }
