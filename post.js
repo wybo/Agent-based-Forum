@@ -12,7 +12,7 @@ Post = (function() {
     if (options.topic !== undefined) {
       this.topic = options.topic;
     } else {
-      this.topic = ABF.random_action(ABF.TOPIC_ACTIONS);
+      this.topic = ABF.choose_random_action(ABF.TOPIC_CHOICE);
     }
     if (options.color) {
       this.color = options.color;

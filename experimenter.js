@@ -3,12 +3,13 @@ $.include = load;
 $.include('agent_based_forum.js');
 
 //reruns = 100; // To average it out
-//reruns = 20; // To average it out
-reruns = 2; // To average it out
+reruns = 20; // To average it out
+//reruns = 5; // To average it out
+//reruns = 2; // To average it out
 
 //generations = 87600; // 365 days
-//generations = 9600; // 40 days
-generations = 3600; // 15 days
+generations = 9600; // 40 days
+//generations = 3600; // 15 days
 //generations = 6;
 
 //initial_actor_or_arrivals_settings = [10, 20, 30, 40, 50];
