@@ -14,13 +14,13 @@ Post = (function() {
     } else {
       this.topic = ABF.choose_random_action(ABF.TOPIC_CHOICE);
     }
-//    if (options.color) {
-//      this.color = options.color;
-//    } else if (this.topic !== undefined) {
-//      this.color = ABF.TOPIC_COLORS[this.topic];
-//    } else {
+    if (options.color) {
+      this.color = options.color;
+    } else if (this.topic !== undefined) {
+      this.color = ABF.TOPIC_COLORS[this.topic];
+    } else {
       this.color = "#000";
-//    }
+    }
     this.seen = {};
     if (options.author) {
       this.author_id = options.author.id;
@@ -37,9 +37,6 @@ Post = (function() {
         this.rating = 3; // Bonus to get new threads going
       } else {
         this.rating = 0;
-      }
-      if (options.rating) {
-        this.rating = options.rating;
       }
       this.time = this.thread.forum.run_count;
     }
@@ -133,9 +130,6 @@ Post = (function() {
       if (this.thread.forum.options.mode == ABF.MODES.ordered) {
         context.font = (0.6 * ABF.SCL) + "em sans-serif";
         context.fillText(this.rating, x + 2 * ABF.SCL, y - 2 * ABF.SCL);
-      }
-      if (this.indent === 0 && this.thread.forum.options.mode != ABF.MODES.random) {
-//        context.fillText(this.thread.posts.length, x - 2, y - 10);
       }
     }
     this.inserted = false;

@@ -13,7 +13,7 @@ ABF.DEFAULT_OPTIONS = {};
 //ABF.DEFAULT_OPTIONS.initial_actors = 3;
 ABF.DEFAULT_OPTIONS.initial_actors = 100;
 //ABF.DEFAULT_OPTIONS.initial_threads = 20; // Seed threads
-ABF.DEFAULT_OPTIONS.initial_threads = 1; // Seed threads
+ABF.DEFAULT_OPTIONS.initial_threads = 20; // Seed threads
 ABF.DEFAULT_OPTIONS.max_threads = 20; // threads dropped after this
 ABF.DEFAULT_OPTIONS.mode = ABF.MODES.ordered;
 
@@ -60,8 +60,8 @@ ABF.DEFAULT_OPTIONS.topic_power = 2; // x ** i, for each power
 // Layout
 ABF.SELECTED_PLOT = ABF.PLOTS.users;
 ABF.SPACING = 70;
-ABF.NO_BARS = true;
-ABF.SCL = 20; // Scale, 1 is normal
+ABF.NO_BARS = false;
+ABF.SCL = 1; // Scale, 1 is normal
 ABF.TOPIC_CHOICE = ABF.topic_choice(ABF.DEFAULT_OPTIONS.topics);
 ABF.TOPIC_COLORS = ABF.topic_colors(ABF.DEFAULT_OPTIONS.topics);
 ABF.DEBUG = true; // True if debugging

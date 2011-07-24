@@ -78,18 +78,6 @@ Forum = (function() {
         {indent: 3},
         {indent: 3}
       ];
-    seed_thread = [
-        {indent: 0, rating: 58},
-        {indent: 1, rating: 52},
-        {indent: 2, rating: 9},
-        {indent: 3, rating: 6},
-        {indent: 3, rating: 5},
-        {indent: 4, rating: 1},
-        {indent: 2, rating: 48},
-        {indent: 3, rating: 0},
-        {indent: 1, rating: 41},
-        {indent: 1, rating: 2}
-        ];
     seed_single = [seed_thread[0]];
     if (this.options.initial_threads < 1) {
       init_array.push(seed_single);
@@ -111,7 +99,7 @@ Forum = (function() {
       for (i = 0; i < init_array.length; i++) {
         for (j = 0; j < init_array[i].length; j++) {
           if (init_array[i][j].indent !== 0) {
-            init_array[i][j].indent = 1;
+            init_array[i][j].indent = j;
           }
         }
       }

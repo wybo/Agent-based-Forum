@@ -134,11 +134,11 @@ ForumThread = (function() {
         context = this.forum.context,
         i;
     if (this.forum.options.mode == ABF.MODES.random) {
-      x = 10 * ABF.SCL + nr % 2 * width_step * 2 * 2;
-      y = height_step + Math.floor(nr / 2) * height_step * 2;
+      x = 10 * ABF.SCL + nr % 70 * width_step * 2;
+      y = height_step + Math.floor(nr / 70) * height_step;
       this.posts[0].draw(x, y);
       if (this.posts[0].actor) {
-//        this.posts[0].actor.draw(x, y);
+        this.posts[0].actor.draw(x, y);
         this.posts[0].actor = null;
       }
     } else {
@@ -155,7 +155,7 @@ ForumThread = (function() {
   
       this.posts[0].draw(x_start, height_step);
       if (this.posts[0].actor) {
-//        this.posts[0].actor.draw(x_start, height_step);
+        this.posts[0].actor.draw(x_start, height_step);
         this.posts[0].actor = null;
       }
 
@@ -174,7 +174,7 @@ ForumThread = (function() {
         }
         this.posts[i].draw(x + width_step, y + height_step);
         if (this.posts[i].actor) {
-//          this.posts[i].actor.draw(x + width_step, y + height_step);
+          this.posts[i].actor.draw(x + width_step, y + height_step);
           this.posts[i].actor = null;
         }
         context.beginPath();
