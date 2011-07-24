@@ -14,17 +14,21 @@ Post = (function() {
     } else {
       this.topic = ABF.choose_random_action(ABF.TOPIC_CHOICE);
     }
-    if (options.color) {
-      this.color = options.color;
-    } else if (this.topic !== undefined) {
-      this.color = ABF.TOPIC_COLORS[this.topic];
-    } else {
+//    if (options.color) {
+//      this.color = options.color;
+//    } else if (this.topic !== undefined) {
+//      this.color = ABF.TOPIC_COLORS[this.topic];
+//    } else {
       this.color = "#000";
-    }
+//    }
+    this.seen = {};
     if (options.author) {
       this.author_id = options.author.id;
-    } else {
-      this.author_id = 0;
+      this.seen[this.author_id] = true;
+      if (!this.thread.forum.daily_unique_posters_hash[this.author_id]) {
+        this.thread.forum.daily_unique_posters_hash[this.author_id] = true;
+        this.thread.forum.daily_unique_posters_count++;
+      }
     }
     this.thread.forum.positions_hash[this.id] = 
         {thread: options.thread_index, post: options.index};
@@ -34,15 +38,10 @@ Post = (function() {
       } else {
         this.rating = 0;
       }
+      if (options.rating) {
+        this.rating = options.rating;
+      }
       this.time = this.thread.forum.run_count;
-    }
-    this.seen = {};
-    this.seen[this.author_id] = true;
-    this.posted_in = {};
-    this.posted_in[this.author_id] = true;
-    if (!this.thread.forum.daily_unique_posters_hash[this.author_id]) {
-      this.thread.forum.daily_unique_posters_hash[this.author_id] = true;
-      this.thread.forum.daily_unique_posters_count++;
     }
     return this;
   };
@@ -71,7 +70,7 @@ Post = (function() {
       indent = this.indent;
     }
     for (i = position_hash.post - 1; i > 0; i--) {
-      if (this.thread.posts[i].indent >= indent) {
+      if (this.thread.posts[i].indent <= indent) {
         return this.thread.posts[i];
       }
     }
@@ -117,16 +116,6 @@ Post = (function() {
     for (i = insert_position + 1; i < this.thread.posts.length; i++) {
       this.thread.forum.positions_hash[this.thread.posts[i].id].post++;
     }
-    // Set posted_in for all parent-posts
-    if (insert_indent) {
-      indent_pointer = insert_indent;
-      for (i = insert_position - 1; i >= 0; i--) {
-        if (this.thread.posts[i].indent < indent_pointer) {
-          this.thread.posts[i].posted_in[author.id] = 1;
-          indent_pointer = this.thread.posts[i].indent;
-        }
-      }
-    }
     return this.thread.posts[insert_position];
   };
 
@@ -142,10 +131,11 @@ Post = (function() {
     context.fill();
     if (ABF.DEBUG) {
       if (this.thread.forum.options.mode == ABF.MODES.ordered) {
-        context.fillText(this.rating, x, y);
+        context.font = (0.6 * ABF.SCL) + "em sans-serif";
+        context.fillText(this.rating, x + 2 * ABF.SCL, y - 2 * ABF.SCL);
       }
       if (this.indent === 0 && this.thread.forum.options.mode != ABF.MODES.random) {
-        context.fillText(this.thread.posts.length, x - 2, y - 10);
+//        context.fillText(this.thread.posts.length, x - 2, y - 10);
       }
     }
     this.inserted = false;
