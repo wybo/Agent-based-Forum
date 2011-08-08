@@ -11,7 +11,7 @@ ABF.DEFAULT_OPTIONS = {};
 
 // Initialization
 //ABF.DEFAULT_OPTIONS.initial_actors = 3;
-ABF.DEFAULT_OPTIONS.initial_actors = 100;
+ABF.DEFAULT_OPTIONS.initial_actors = 100; // Disabled in threshold mode
 //ABF.DEFAULT_OPTIONS.initial_threads = 20; // Seed threads
 ABF.DEFAULT_OPTIONS.initial_threads = 20; // Seed threads
 ABF.DEFAULT_OPTIONS.max_threads = 20; // threads dropped after this
@@ -31,25 +31,31 @@ ABF.DEFAULT_OPTIONS.c_d_max_starting = 25; // 30; // Actors receive this + c_d_l
 // also is max carry over of current (not counting next desire (see below))
 ABF.DEFAULT_OPTIONS.c_d_leave_cutoff = 5;
 ABF.DEFAULT_OPTIONS.c_d_read = -1;
-ABF.DEFAULT_OPTIONS.c_d_create = -5; // If costlier, 5, can make ordered better than indented
+ABF.DEFAULT_OPTIONS.c_d_create = -3; // If costlier, 5, can make ordered better than indented
 ABF.DEFAULT_OPTIONS.c_d_page_load = -0.2;
-ABF.DEFAULT_OPTIONS.c_d_received_reply = 15; // Also see r_d_received_reply
+ABF.DEFAULT_OPTIONS.c_d_received_reply = 20; // Also see r_d_received_reply
 ABF.DEFAULT_OPTIONS.c_d_nothing_left_fraction = 3.0 / 4; // Substracted from any remaining that is carried over
 // next
-ABF.DEFAULT_OPTIONS.n_d_on_topic = 2; // 1.8 // 2.3
-ABF.DEFAULT_OPTIONS.n_d_off_topic = 0.5; // -0.5
+ABF.DEFAULT_OPTIONS.n_d_on_topic = 1.8; // 1.8 // 2.3
+ABF.DEFAULT_OPTIONS.n_d_off_topic = 0.5; // 0.5; // -0.5
 // reply
 ABF.DEFAULT_OPTIONS.r_d_received_reply = 60; 
 ABF.DEFAULT_OPTIONS.r_d_drop_off = -1 * ABF.DEFAULT_OPTIONS.r_d_received_reply / 10.0;
 
-// Thresholds
+// Switches
 ABF.DEFAULT_OPTIONS.with_thresholds = false;
 ABF.DEFAULT_OPTIONS.threshold_average = 25;
 ABF.DEFAULT_OPTIONS.threshold_standard_deviation = 15;
 ABF.DEFAULT_OPTIONS.daily_arrivals = 10;
+ABF.DEFAULT_OPTIONS.disable_reply_bonus = false;
+ABF.DEFAULT_OPTIONS.disable_reciprocity = false; // true if disable_reply_bonus is set to true
+
 if (ABF.DEFAULT_OPTIONS.with_thresholds) { // No initial actors in thresholds mode
   ABF.DEFAULT_OPTIONS.initial_actors = 0;
   ABF.DEFAULT_OPTIONS.daily_arrivals_fraction = 0;
+}
+if (ABF.DEFAULT_OPTIONS.disable_reply_bonus) { // No reciprocity without reply-bonus
+  ABF.DEFAULT_OPTIONS.disable_reciprocity = true;
 }
 
 // Normally not changed
@@ -60,7 +66,7 @@ ABF.DEFAULT_OPTIONS.topic_power = 2; // x ** i, for each power
 // Layout
 ABF.SELECTED_PLOT = ABF.PLOTS.users;
 ABF.SPACING = 70;
-ABF.NO_BARS = false;
+ABF.NO_BARS = true;
 ABF.SCL = 1; // Scale, 1 is normal
 ABF.TOPIC_CHOICE = ABF.topic_choice(ABF.DEFAULT_OPTIONS.topics);
 ABF.TOPIC_COLORS = ABF.topic_colors(ABF.DEFAULT_OPTIONS.topics);

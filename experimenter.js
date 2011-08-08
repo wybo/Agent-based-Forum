@@ -13,19 +13,22 @@ reruns = 20; // To average it out
 //reruns = 1;
 
 //generations = 87600; // 365 days
-generations = 9600; // 40 days
+generations = 12240; // 51 days
+//generations = 9600; // 40 days
 //generations = 3600; // 15 days
+//generations = 240;
 //generations = 6;
 //generations = 1;
 
 //initial_actor_or_arrivals_settings = [10, 20, 30, 40, 50];
 //initial_actor_or_arrivals_settings = [2, 3, 4, 5, 10, 20];
-//initial_actor_or_arrivals_settings = [5, 10, 15, 20, 25, 35];
+//initial_actor_or_arrivals_settings = [5, 10, 15, 20, 30, 40];
 initial_actor_or_arrivals_settings = [50, 100, 200];
 //initial_actor_or_arrivals_settings = [500, 1500, 5000];
+//initial_actor_or_arrivals_settings = [50, 100];
 //initial_actor_or_arrivals_settings = [50];
 
-note = "Reciprocity slightly down, on-topic 1.8";
+note = "Real production data set";
 
 tests = [
       {

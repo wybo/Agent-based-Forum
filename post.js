@@ -81,12 +81,11 @@ Post = (function() {
         indent_pointer,
         i;
     position_hash = this.thread.forum.positions_hash[this.id];
-    post = this.thread.posts[position_hash.post]; // TODO use this instead
     // Find insert position
     if (this.thread.forum.options.mode != ABF.MODES.threaded) {
       for (i = position_hash.post + 1; i < this.thread.posts.length; i++) {
         if (insert_position === false) {
-          if (this.thread.posts[i].indent <= post.indent) {
+          if (this.thread.posts[i].indent <= this.indent) {
             insert_position = i;
           }
         }
@@ -99,7 +98,7 @@ Post = (function() {
     if (this.thread.forum.options.mode == ABF.MODES.threaded) {
       insert_indent = this.thread.posts.length;
     } else if (this.thread.forum.options.mode == ABF.MODES.subthreaded || this.thread.forum.options.mode == ABF.MODES.ordered) {
-      insert_indent = post.indent + 1;
+      insert_indent = this.indent + 1;
     } else {
       insert_indent = null;
     }
@@ -108,7 +107,7 @@ Post = (function() {
             author: author,
             topic: topic,
             thread_index: position_hash.thread}, 
-            post.thread));
+            this.thread));
     // Raise post_index for posts below
     for (i = insert_position + 1; i < this.thread.posts.length; i++) {
       this.thread.forum.positions_hash[this.thread.posts[i].id].post++;

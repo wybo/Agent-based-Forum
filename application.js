@@ -1,9 +1,14 @@
 experiment = [];
 
-MODE_STRINGS = ["Random (no threads)", "Threads (flat threads)", "Subthreads (indented)", "Ratings and subthreads (ordered)"];
-PLOT_STRINGS = ["Daily unique posters", "Users over time", "Daily arrivals and leavers", "Posts over time", "Threads over time", "Users for each topic"];
+MODE_STRINGS = ["Random (no threads)", "Threads (flat threads)", "Subthreads (indented)",
+    "Ratings and subthreads (ordered)"];
+PLOT_STRINGS = ["Daily unique posters", "Users over time", "Daily arrivals and leavers", "Posts over time",
+    "Threads over time", "Users for each topic"];
+CONFIGURABLES = ["initial_actors", "initial_threads", "reply_chance", "new_thread_chance",
+    "daily_arrivals_fraction", "c_d_read", "c_d_create", "c_d_page_load", "c_d_received_reply",
+    "n_d_on_topic", "n_d_off_topic", "r_d_received_reply"];
 
-setup_forum_gui = function(forum, space, plot_space, start, order) {
+setup_forum_gui = function(forum, space, plot_space, start) {
   forum.initialize_display(space, plot_space);
   var start_value = 'Start simulation';
   var pause_value = 'Pause simulation';
@@ -15,17 +20,6 @@ setup_forum_gui = function(forum, space, plot_space, start, order) {
       $(this).val(start_value);
     }
     forum.toggleRun();
-  });
-  var o_start_value = 'Old threads first';
-  var o_stop_value = 'New threads first';
-  $(order).val(o_start_value);
-  $(order).click(function() {
-    if ($(this).val() == o_start_value) {
-      $(this).val(o_stop_value);
-    } else {
-      $(this).val(o_start_value);
-    }
-    forum.toggleOrder();
   });
 };
 
@@ -66,11 +60,13 @@ _display_costs_benefits = function(div, config) {
     'Reply<br />' +
     'r_d_received_reply = ' + config.r_d_received_reply + '<br />' +
     'r_d_drop_off = ' + config.r_d_drop_off + '<br />' +
-    '<br />Thresholds<br />' +
+    '<br />Switches<br />' +
     'with_thresholds = ' + config.with_thresholds + '<br />' +
     'threshold_average = ' + config.threshold_average + '<br />' +
     'threshold_standard_deviation = ' + config.threshold_standard_deviation + '<br />' +
     'threshold_daily_arrivals = ' + config.daily_arrivals + '<br />' +
+    'disable_reply_bonus = ' + config.disable_reply_bonus + '<br />' +
+    'disable_reciprocity = ' + config.disable_reciprocity + '<br />' +
     '<br />Old<br />' +
     'c_d_skim = ' + config.c_d_skim + '<br />' +
     'c_d_nothing_left = ' + config.c_d_nothing_left + '<br />' +
@@ -135,7 +131,8 @@ plot_test = function(test, index) {
   div.append(div2);
   for (i = 0; i < keys.length; i++) {
     if (test.data[keys[i]]) {
-      space = $('<div>').css({'width' : '300px', 'height' : '160px', 'float' : 'left', 'margin-right' : '0.7em', 'margin-bottom' : '1em'});
+      space = $('<div>').css({'width' : '300px', 'height' : '160px', 'float' : 'left', 'margin-right' : '0.7em',
+          'margin-bottom' : '1em'});
       div2.append(space);
       $.plot(space, test.data[keys[i]], options);
     }
@@ -145,6 +142,45 @@ plot_test = function(test, index) {
 setup_dropdown = function(option_select, options, default_option) {
   for (var i = 0; i < options.length; i++) {
     $(option_select).append(
-      '<option value="' + i + '"' + (default_option == i ? ' selected="selected"' : '') + '>' + options[i] + '</option>');
+        '<option value="' + i + '"' + (default_option == i ? ' selected="selected"' : '') + '>' + 
+        options[i] + '</option>');
   }
+};
+
+draw_config_fields = function(space, forum, settings) {
+  var div,
+      pass_to,
+      i;
+  div = $(space);
+  div.html('');
+  for (i = 0; i < settings.length; i++) {
+    div.append(
+        '<input value="' + forum.options[settings[i]] + '" name="' + settings[i] + '"' +
+        ' type="text" style="width: 3em;"/> ' + settings[i] + '<br />');
+  }
+  pass_to = '\'' + space + '\', forum, [\'' + settings.join('\',\'') + '\']';
+  div.append('<p>' +
+      '<input type="button" id="set_config" value="Apply configuration" onclick="apply_config_fields(' +
+      pass_to + ');"/>' +
+      '<input type="button" value="Restore" onclick="forum.restore_and_restart(); draw_config_fields(\'' + 
+      pass_to + ');" />' +
+      '</p>');
+
+};
+
+apply_config_fields = function(space, forum, settings) {
+  var options,
+      value_string,
+      i;
+  options = {};
+  for (i = 0; i < settings.length; i++) {
+    value_string = $(space + ' ' + 'input[name=' + settings[i] + ']').val();
+    if (value_string.match(/\./i)) {
+      options[settings[i]] = parseFloat(value_string);
+    } else {
+      options[settings[i]] = parseInt(value_string, 10);
+    }
+  }
+  forum.set_options(options);
+  draw_config_fields(space, forum, settings);
 };

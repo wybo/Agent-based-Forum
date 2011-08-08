@@ -15,7 +15,7 @@ end
 
 experiment = `#{JS_SHELL} #{runner} #{JS_SHELL_OPTIONS}`
 
-experiment.gsub!("\n","")
+experiment = experiment.gsub("\n","")
 
 if !full_data
   list = Dir.glob("runs/*")

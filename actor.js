@@ -90,7 +90,7 @@ Actor = (function() {
         }
         if (this.forum.options.mode != ABF.MODES.random) {
           this.choice.actions[0].chance = reply_chance;
-          this.choice.actions[2].chance = this.seen_uninteresting_in_thread * 3;
+          this.choice.actions[2].chance = this.seen_uninteresting_in_thread * 4;
         } else {
           this.choice.actions[0].chance = reply_chance + this.forum.options.new_thread_chance;
         }
@@ -114,7 +114,7 @@ Actor = (function() {
   construct.prototype.read_current_post = function() {
     var post = this.post(),
         parent_post = post.previous(post.indent - 1);
-    if (post.seen[this.id] || post.author_id == this.id) {
+    if (post.seen[this.id]) {
       this.skim_post(post); 
     } else {
       if (post.indent === 0 && this.forum.options.mode != ABF.MODES.random) { // a thread
@@ -134,7 +134,9 @@ Actor = (function() {
         this.seen_uninteresting_in_thread++;
       }
       if (parent_post && parent_post.author_id == this.id) {
-        this.notice_reply(post);
+        if (!this.forum.options.disable_reply_bonus) {
+          this.notice_reply(post);
+        }
       }
       post.seen[this.id] = true;
     }
@@ -155,7 +157,7 @@ Actor = (function() {
     }
   };
 
-  construct.prototype.notice_reply = function(post) {
+  construct.prototype.notice_reply = function(post) { // Not called if disable_reply_bonus
     var id_to_forget;
     if (this.seen_reply_from_queue.length > 10) {
       id_to_forget = this.seen_reply_from_queue.shift();
@@ -163,9 +165,10 @@ Actor = (function() {
         delete this.seen_reply_from[id_to_forget];
       }
     }
-    this.seen_reply_from[post.author_id] = true;
-    this.seen_reply_from_queue.push(post.author_id);
-
+    if (!this.forum.options.disable_reciprocity) {
+      this.seen_reply_from[post.author_id] = true;
+      this.seen_reply_from_queue.push(post.author_id);
+    }
     this.current_desire += this.forum.options.c_d_received_reply;
     this.reply_desire += this.forum.options.r_d_received_reply;
   };
