@@ -51,7 +51,6 @@ end
 system "git commit -a"
 system "git push"
 
-system "tar -czf trunk.tgz *"
 files = Dir.glob("*.js")
 files.delete("jquery.js")
 files.delete("include.js")
