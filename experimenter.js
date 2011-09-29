@@ -1,5 +1,7 @@
 $ = {};
-$.include = load;
+$.include = function(file, file_list) {
+  load(file);
+}
 $.include('agent_based_forum.js');
 
 if (typeof(FULL_DATA) === undefined) {
@@ -7,16 +9,16 @@ if (typeof(FULL_DATA) === undefined) {
 }
 
 //reruns = 100; // To average it out
-reruns = 20; // To average it out
+//reruns = 20; // To average it out
 //reruns = 5; // To average it out
-//reruns = 2; // To average it out
+reruns = 2; // To average it out
 //reruns = 1;
 
 //generations = 87600; // 365 days
-generations = 12240; // 51 days
+//generations = 12240; // 51 days
 //generations = 9600; // 40 days
 //generations = 3600; // 15 days
-//generations = 240;
+generations = 240;
 //generations = 6;
 //generations = 1;
 

@@ -43,7 +43,7 @@
         <input type="button" value="Restart" onclick="forum.restart();" />
       </p>
       <p>
-        <select id="mode_select" onchange="forum.set_mode(this); display_config('#config_space', forum.options)"></select>
+        <select id="mode_select" onchange="forum.set_mode(this); draw_config_fields('#config_space', forum, CONFIGURABLES)"></select>
       </p>
     </div>
     <div style="width: 600px; float: right; padding-left: 1em;">

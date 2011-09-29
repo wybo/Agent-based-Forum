@@ -23,18 +23,6 @@ setup_forum_gui = function(forum, space, plot_space, start) {
   });
 };
 
-display_config = function(content_space, config) {
-  div = $(content_space);
-  _display_config(div, config);
-}
-
-_display_config = function(div, config) {
-  div.html('<p>Mode: ' + MODE_STRINGS[config.mode] + ', Initial: ' + config.initial_actors +
-      ', -threads: ' + config.initial_threads + ', Max threads: ' + config.max_threads + 
-      ', Daily arrivals: ' + (config.with_thresholds ? config.daily_arrivals : config.daily_arrivals_fraction) + 
-      ', Chance-reply: ' + config.reply_chance + ', -new-thread: ' + config.new_thread_chance + '</p>');
-};
-
 _display_note = function(div, config) {
   div2 = $('<div>').css({'float' : 'left', 'clear' : 'left'}).attr('id', 'note_space');
   $(div).append(div2);
@@ -46,6 +34,7 @@ _display_costs_benefits = function(div, config) {
   div2 = $('<div>').css({'float' : 'left', 'clear' : 'left'}).attr('id', 'costs_benefits_space');
   $(div).append(div2);
   div2.html('<p>' +  
+    '<br /><i>Configuration</i><br /><br />' +
     'Current<br />' +
     'c_d_max_starting = ' + config.c_d_max_starting + '<br />' +
     'c_d_read = ' + config.c_d_read + '<br />' +
@@ -60,20 +49,27 @@ _display_costs_benefits = function(div, config) {
     'Reply<br />' +
     'r_d_received_reply = ' + config.r_d_received_reply + '<br />' +
     'r_d_drop_off = ' + config.r_d_drop_off + '<br />' +
-    '<br />Switches<br />' +
+    '<br /><i>Switches</i><br /><br />' +
     'with_thresholds = ' + config.with_thresholds + '<br />' +
     'threshold_average = ' + config.threshold_average + '<br />' +
     'threshold_standard_deviation = ' + config.threshold_standard_deviation + '<br />' +
     'threshold_daily_arrivals = ' + config.daily_arrivals + '<br />' +
     'disable_reply_bonus = ' + config.disable_reply_bonus + '<br />' +
     'disable_reciprocity = ' + config.disable_reciprocity + '<br />' +
-    '<br />Old<br />' +
+    '<br /><i>Old</i><br /><br />' +
     'c_d_skim = ' + config.c_d_skim + '<br />' +
     'c_d_nothing_left = ' + config.c_d_nothing_left + '<br />' +
     'c_d_offline_cutoff = ' + config.c_d_offline_cutoff + '<br />' +
     'n_d_skim_compensation = ' + config.n_d_skim_compensation + '<br />' +
     'n_d_received_reply = ' + config.n_d_received_reply + '<br />' +
         '</p>');
+};
+
+_display_config = function(div, config) {
+  div.html('<p>Mode: ' + MODE_STRINGS[config.mode] + ', Initial: ' + config.initial_actors +
+      ', -threads: ' + config.initial_threads + ', Max threads: ' + config.max_threads + 
+      ', Daily arrivals: ' + (config.with_thresholds ? config.daily_arrivals : config.daily_arrivals_fraction) + 
+      ', Chance-reply: ' + config.reply_chance + ', -new-thread: ' + config.new_thread_chance + '</p>');
 };
 
 set_experiment = function(selector) {
