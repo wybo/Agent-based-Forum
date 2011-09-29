@@ -64,4 +64,3 @@ if PUBLISH_COMMAND
   system PUBLISH_COMMAND
   system "rm *.js.html"
 end
-system "rm *.tgz"
