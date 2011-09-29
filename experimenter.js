@@ -17,8 +17,8 @@ reruns = 2; // To average it out
 //generations = 87600; // 365 days
 //generations = 12240; // 51 days
 //generations = 9600; // 40 days
-//generations = 3600; // 15 days
-generations = 240;
+generations = 3600; // 15 days
+//generations = 240;
 //generations = 6;
 //generations = 1;
 
