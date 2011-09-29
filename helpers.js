@@ -20,51 +20,57 @@ ABF.bind = function(obj, method) {
 
 // Actions and action-related
 
-ABF.prepare_actions = function(actions, options) {
-  var cutoff = 0.0,
-      i,
-      structure = {};
+ABF.prepare_choice = function(actions, options) {
+  var choice = {},
+      i;
   if (actions[actions.length - 1].total) {
-    structure.total = actions[actions.length - 1].total * 1.0; // to float
+    choice.total = actions[actions.length - 1].total * 1.0; // to float
     if (actions[actions.length - 1].action) {
-      actions[actions.length - 1].chance = structure.total;
+      // will lead to an over 1 cutoff but no problem
+      actions[actions.length - 1].chance = choice.total;
     } else {
       actions[actions.length - 1].action = ABF.skip;
     }
   } else {
-    structure.total = 0.0;
+    choice.total = 0.0;
     for (i = 0; i < actions.length; i++) {
-      structure.total += actions[i].chance;
+      choice.total += actions[i].chance;
     }
   }
-  for (i = 0; i < actions.length; i++) {
-    var fraction = actions[i].chance / structure.total;
-    cutoff += fraction;
-    actions[i].cutoff = cutoff;
-    if (options && options.bind) {
+  if (options && options.bind) {
+    for (i = 0; i < actions.length; i++) {
       actions[i].action = ABF.bind(options.bind, actions[i].action);
     }
   }
-  structure.actions = actions;
-  return structure;
+  choice.actions = actions;
+  choice = ABF.calculate_choice_cutoffs(choice);
+  return choice;
 };
 
-ABF.random_action = function(actions, boosts, swap) {
+ABF.calculate_choice_cutoffs = function(choice) {
+  var fraction,
+      cutoff = 0.0,
+      i;
+  for (i = 0; i < choice.actions.length; i++) {
+    fraction = choice.actions[i].chance / choice.total;
+    cutoff += fraction;
+    choice.actions[i].cutoff = cutoff;
+  }
+  return choice;
+};
+
+ABF.choose_random_action = function(choice, boost, swap) {
   var roll;
-  if (boosts) {
-    roll = Math.random() * (1.0 + boosts[0][1]);
+  if (boost) {
+    roll = Math.random() * (1.0 + boost[1]);
     if (roll >= 1) {
-      if (boosts[1] && boosts[1][1] > roll - 1) {
-        return actions.actions[boosts[1][0]].action();
-      } else {
-        return actions.actions[boosts[0][0]].action();
-      }
+      return choice.actions[boost[0]].action();
     }
   } else {
     roll = Math.random();
   }
-  for (var i = 0; i < actions.actions.length; i++) {
-    if (roll < actions.actions[i].cutoff) {
+  for (var i = 0; i < choice.actions.length; i++) {
+    if (roll < choice.actions[i].cutoff) {
       if (swap) {
         if (i === 0) { // If 0, and swap 0, still 0
           i = swap;
@@ -72,7 +78,7 @@ ABF.random_action = function(actions, boosts, swap) {
           i = 0;
         }
       }
-      return actions.actions[i].action();
+      return choice.actions[i].action();
     }
   }
 };
@@ -92,7 +98,7 @@ ABF.fifty_fifty = function() {
 //  }
 };
 
-ABF.topic_actions = function(topics) {
+ABF.topic_choice = function(topics) {
   var actions = [],
       i;
   for (i = 0; i < topics; i++) {
@@ -101,15 +107,20 @@ ABF.topic_actions = function(topics) {
 //      chance: 1.0 / Math.pow((i + 1), 1.25),
       action: ABF.arg_returning_function(i) });
   }
-  return ABF.prepare_actions(actions);
+  return ABF.prepare_choice(actions);
 };
 
 ABF.topic_colors = function(topics) {
   var topic_colors = [],
-      topic_multiplier = topics / 8.0,
+      topic_multiplier,
       wheel_part_part = [],
       wheel_part = null,
       i;
+  if (topics < 8) {
+    topic_multiplier = 1.0;
+  } else {
+    topic_multiplier = topics / 8.0;
+  }
   for (i = 1; i <= topic_multiplier; i++) {
     wheel_part_part.push(Math.ceil(255 / topic_multiplier) * i);
   }

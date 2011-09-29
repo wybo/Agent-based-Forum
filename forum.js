@@ -6,8 +6,8 @@ Forum = (function() {
   var construct;
 
   construct = function(options) {
-    this.options = options;
-    this.reset();
+    this.default_options = options;
+    this.restore_and_restart();
   };
 
   construct.prototype.initialize_display = function(space, plot_space) {
@@ -20,7 +20,9 @@ Forum = (function() {
     this.draw();
   };
 
-  construct.prototype.reset = function() {
+  construct.prototype.restore_and_restart = function() {
+    this.options = {};
+    this.set_options(this.default_options);
     this.restart();
   };
 
@@ -62,22 +64,22 @@ Forum = (function() {
     this.positions_hash = {};
     this.threads = [];
     seed_thread = [
-        {indent: 0},
-        {indent: 1},
-        {indent: 2},
-        {indent: 2},
-        {indent: 2},
-        {indent: 3},
-        {indent: 3},
-        {indent: 3},
-        {indent: 1},
-        {indent: 2},
-        {indent: 2},
-        {indent: 2},
-        {indent: 3},
-        {indent: 3},
-        {indent: 3}
-      ];
+          {indent: 0},
+          {indent: 1},
+          {indent: 2},
+          {indent: 2},
+          {indent: 2},
+          {indent: 3},
+          {indent: 3},
+          {indent: 3},
+          {indent: 1},
+          {indent: 2},
+          {indent: 2},
+          {indent: 2},
+          {indent: 3},
+          {indent: 3},
+          {indent: 3}
+        ];
     seed_single = [seed_thread[0]];
     if (this.options.initial_threads < 1) {
       init_array.push(seed_single);
@@ -161,7 +163,7 @@ Forum = (function() {
     if (previous_mode != this.options.mode && (previous_mode == ABF.MODES.random || this.options.mode == ABF.MODES.random)) {
       this.toggleOrder();
     }
-    this.reset();
+    this.restart();
   };
 
   construct.prototype.set_plot = function(selector) {
@@ -343,13 +345,13 @@ Forum = (function() {
     return {
         config: this.options, 
         data: {
-            unique_posters: [this.plot_daily_unique_posters],
-            users: [this.plot_users],
-            arrivals_leavers: [this.plot_daily_arrivals, this.plot_daily_leavers],
-            posts: [this.plot_posts],
-            threads: [this.plot_threads],
-            topics: this.plot_topics,
-            critical_mass_days: this.critical_mass_days
+          unique_posters: [this.plot_daily_unique_posters],
+          users: [this.plot_users],
+          arrivals_leavers: [this.plot_daily_arrivals, this.plot_daily_leavers],
+          posts: [this.plot_posts],
+          threads: [this.plot_threads],
+          topics: this.plot_topics,
+          critical_mass_days: this.critical_mass_days
         }};
   };
 
@@ -360,6 +362,16 @@ Forum = (function() {
       this.daily_arrivals_count = 0;
       this.daily_leavers_count = 0;
     }
+  };
+
+  construct.prototype.set_options = function(options) {
+    var property;
+    for (property in options) {
+      if (options.hasOwnProperty(property)) {
+        this.options[property] = options[property];
+      }
+    }
+    this.restart();
   };
 
   return construct;

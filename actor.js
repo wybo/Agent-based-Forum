@@ -6,6 +6,7 @@ Actor = (function() {
   var construct;
 
   construct = function(options, forum) {
+    var actions;
     // The global forum
     this.forum = forum;
     this.id = this.forum.actors_id_counter++;
@@ -22,24 +23,24 @@ Actor = (function() {
     this.current_desire = this.forum.options.c_d_leave_cutoff + 
         Math.floor(Math.random() * (this.forum.options.c_d_max_starting));
     this.reply_desire = 0;
-    this.topic = ABF.random_action(ABF.TOPIC_ACTIONS);
-    this.actions = [];
+    this.topic = ABF.choose_random_action(ABF.TOPIC_CHOICE);
+    actions = [];
     if (this.forum.options.mode != ABF.MODES.random) {
-      this.actions.push({
+      actions.push({
           chance: this.forum.options.reply_chance,
           action: this.to_reply
         }, {
-          chance: this.forum.options.next_thread_chance,
-          action: this.to_next_thread
-        }, {
           chance: this.forum.options.new_thread_chance,
           action: this.to_new_thread
+        }, {
+          chance: this.forum.options.next_thread_chance,
+          action: this.to_next_thread
         }, {
           total: 1000,
           action: this.to_next_post
         });
     } else {
-      this.actions.push({
+      actions.push({
           chance: this.forum.options.reply_chance + this.forum.options.new_thread_chance,
           action: this.to_new_thread
         }, {
@@ -47,10 +48,11 @@ Actor = (function() {
           action: this.to_next_thread
         });
     }
-    this.actions = ABF.prepare_actions(this.actions, {bind: this});
+    this.choice = ABF.prepare_choice(actions, {bind: this});
     this.reading = true;
     this.seen_thread_in_session = {};
-    this.seen_reply_from_in_session = {};
+    this.seen_reply_from_queue = [];
+    this.seen_reply_from = {};
     this.seen_uninteresting_in_thread = 0;
     this.forum.users_count++;
     if (!this.forum.users_per_topic_count[this.topic]) {
@@ -65,7 +67,7 @@ Actor = (function() {
 
   /// Agent rate and objective functions
   construct.prototype.run = function() {
-    var reply_boost;
+    var reply_chance;
     if (this.position === false) { // is offline, rate function
       if (this.current_desire < this.forum.options.c_d_leave_cutoff) {
         this.leave_forum();
@@ -73,7 +75,7 @@ Actor = (function() {
         var roll = Math.floor(Math.random()*1001);
         if (this.current_desire / this.forum.options.desire_for_online_divider > roll) { // if desire greater than roll
           this.go_online();
-          this.read_post(this.post());
+          this.read_current_post();
         }
       }
     } else { // is visiting forum, objective function
@@ -81,18 +83,22 @@ Actor = (function() {
       if (this.current_desire < 0) { // no desire left, leave
         this.go_offline();
       } else {
-        post = this.post();
-        if (this.seen_reply_from_in_session[post.author_id]) {
-          reply_boost = this.reply_desire * 3.0;
-        } else {
-          reply_boost = this.reply_desire * 1.0;
+        last_post = this.post();
+        reply_chance = 1.0 * this.forum.options.reply_chance + this.reply_desire;
+        if (this.seen_reply_from[last_post.author_id]) { // undefined author_id is impossible, as checked on set
+          reply_chance = reply_chance * 3;
         }
-        //ABF.random_action(this.actions, {boost: [0, this.current_desire + this.reply_desire]});
-        ABF.random_action(this.actions, // both reply_ and seen_uninteresting here for boost implementation reasons
-            [[0, (reply_boost + this.seen_uninteresting_in_thread) / this.actions.total],
-             [1, (this.seen_uninteresting_in_thread) / this.actions.total]]);
+        if (this.forum.options.mode != ABF.MODES.random) {
+          this.choice.actions[0].chance = reply_chance;
+          this.choice.actions[2].chance = this.seen_uninteresting_in_thread * 4;
+        } else {
+          this.choice.actions[0].chance = reply_chance + this.forum.options.new_thread_chance;
+        }
+        this.choice = ABF.calculate_choice_cutoffs(this.choice);
+        //ABF.choose_random_action(this.choice, {boost: [0, this.current_desire + this.reply_desire]});
+        ABF.choose_random_action(this.choice); // both reply_ and seen_uninteresting here for boost implementation reasons
         if (this.position !== false) {
-          this.read_post(post);
+          this.read_current_post();
         }
       }
       // reduce reply desire with time
@@ -105,8 +111,9 @@ Actor = (function() {
   };
   ///
   
-  construct.prototype.read_post = function(post) {
-    var parent_post = post.previous(post.indent - 1);
+  construct.prototype.read_current_post = function() {
+    var post = this.post(),
+        parent_post = post.previous(post.indent - 1);
     if (post.seen[this.id]) {
       this.skim_post(post); 
     } else {
@@ -127,13 +134,11 @@ Actor = (function() {
         this.seen_uninteresting_in_thread++;
       }
       if (parent_post && parent_post.author_id == this.id) {
-        this.next_desire += this.forum.options.n_d_received_reply;
-        this.reply_desire += this.forum.options.r_d_received_reply;
+        if (!this.forum.options.disable_reply_bonus) {
+          this.notice_reply(post);
+        }
       }
       post.seen[this.id] = true;
-    }
-    if (parent_post && parent_post.author_id == this.id) {
-      this.seen_reply_from_in_session[post.author_id] = true;
     }
     if (post.indent === 0 && !this.seen_thread_in_session[post.id] &&
         this.forum.options.mode != ABF.MODES.random) { // a thread
@@ -150,6 +155,22 @@ Actor = (function() {
     if (this.forum.options.mode == ABF.MODES.ordered) {
       post.rating += 1;
     }
+  };
+
+  construct.prototype.notice_reply = function(post) { // Not called if disable_reply_bonus
+    var id_to_forget;
+    if (this.seen_reply_from_queue.length > 10) {
+      id_to_forget = this.seen_reply_from_queue.shift();
+      if (this.seen_reply_from_queue.indexOf(id_to_forget) == -1) {
+        delete this.seen_reply_from[id_to_forget];
+      }
+    }
+    if (!this.forum.options.disable_reciprocity) {
+      this.seen_reply_from[post.author_id] = true;
+      this.seen_reply_from_queue.push(post.author_id);
+    }
+    this.current_desire += this.forum.options.c_d_received_reply;
+    this.reply_desire += this.forum.options.r_d_received_reply;
   };
 
   //### Actions
@@ -199,13 +220,14 @@ Actor = (function() {
 
   construct.prototype.to_reply = function() {
     var old_post = this.post();
-    var post = old_post.reply(this, ABF.random_action(ABF.TOPIC_ACTIONS, [[old_post.thread.posts[0].topic, 0.5]], old_post.topic));
+    var post = old_post.reply(this, ABF.choose_random_action(ABF.TOPIC_CHOICE, [old_post.thread.posts[0].topic, 0.5], old_post.topic));
     this.position = post.id;
     this.current_desire += this.forum.options.c_d_create;
+    this.reply_desire = 0;
   };
 
   construct.prototype.to_new_thread = function() {
-    var thread = this.post().thread.new_thread(this, ABF.random_action(ABF.TOPIC_ACTIONS, false, this.topic));
+    var thread = this.post().thread.new_thread(this, ABF.choose_random_action(ABF.TOPIC_CHOICE, false, this.topic));
     this.set_thread(thread);
     this.current_desire += this.forum.options.c_d_create;
   };
@@ -234,11 +256,14 @@ Actor = (function() {
   };
 
   construct.prototype.go_offline = function() {
-    this.current_desire += this.forum.options.c_d_nothing_left; // Empty forum, frustration
-    this.current_desire = this.next_desire + Math.max(0, this.current_desire); // If any is left
+    if (this.current_desire > this.forum.options.leave_cutoff) {
+      this.current_desire = this.next_desire + 
+          this.current_desire * this.forum.options.c_d_nothing_left_fraction; // Empty forum, frustration
+    } else {
+      this.current_desire = this.next_desire;
+    }
     this.next_desire = 0;
     this.seen_thread_in_session = {};
-    this.seen_reply_from_in_session = {};
     this.position = false;
   };
 

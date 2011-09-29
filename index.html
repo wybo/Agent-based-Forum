@@ -10,43 +10,51 @@
     <script type="text/javascript">
       $('document').ready(function() {
         forum = new Forum(ABF.DEFAULT_OPTIONS);
-        setup_forum_gui(forum, '#space', '#plot_space', '#start', '#order');
-        display_config('#config_space', forum.options);
+        setup_forum_gui(forum, '#space', '#plot_space', '#start');
         setup_dropdown('#mode_select', MODE_STRINGS, ABF.DEFAULT_OPTIONS.mode);
         setup_dropdown('#plot_select', PLOT_STRINGS, ABF.SELECTED_PLOT);
+        draw_config_fields('#config_space', forum, CONFIGURABLES);
       });
     </script>
   </head>
   <body>
-    <div style="float: right; padding-left: 2em;">
-      <select id="plot_select" onchange="forum.set_plot(this)" style="margin-bottom: 0.5em; float: right;"></select>
-      <div id="plot_space" style="width: 600px; height: 325px; float: right; clear: right;"></div>
-    </div>
-    <h1>Agent-based Forum</h1>
-    <h4>by Wybo Wiersma</h4>
-    <p style="font-size: 0.8em;">
-      <a href="runs.html">View runs</a>,
-      <a href="http://www.gnu.org/licenses/agpl.html">A-GPL-ed</a>,
-      <a href="agent_based_forum.js.html">source</a>, 
-      <a href="trunk.tgz">(download)</a>,
-      <a href="https://github.com/wybo/Agent-based-Forum">Github</a>
-    </p>
-    <div id="content">
-      <h2>Usage</h2>
+    <div style="width: 80em; float: left">
+    <div style="width: 24em; float: left; padding-right: 1em;">
+      <h1 style="margin: 0;">Agent-based Forum</h1>
+      <h4>by Wybo Wiersma</h4>
+      <p style="font-size: 0.8em;">
+        <a href="runs.html">View runs</a>,
+        <a href="http://www.gnu.org/licenses/agpl.html">A-GPL-ed</a>,
+        <a href="agent_based_forum.js.html">source</a>, 
+        <a href="trunk.tgz">(download)</a>,
+        <a href="https://github.com/wybo/Agent-based-Forum">Github</a>
+      </p>
+      <h3>Usage</h3>
       <ul>
-        <li>Use drop-down to select different thread structures</li>
-        <li><i>Start/Pause simulation</i> to run it continuously</li>
-        <li><i>Next generation</i> to run step by step</li>
-        <li><i>Reset</i> returns it to the start condition</li>
+        <li><i>Start/Pause simulation</i> to run it</li>
+        <li><i>Next generation</i> for stepwise</li>
+        <li><i>Restart</i> resets it</li>
+        <li>Use the drop-down to select different
+        thread structures.</li>
       </ul>
       <p>
-        <select id="mode_select" onchange="forum.set_mode(this); display_config('#config_space', forum.options)"></select>
-        <input type="button" id="order" value="New threads first" /> 
         <input type="button" id="start" value="Start simulation" /> 
         <input type="button" value="Next generation" onclick="forum.run();" />
-        <input type="button" value="Reset" onclick="forum.reset();" />
+        <input type="button" value="Restart" onclick="forum.restart();" />
       </p>
+      <p>
+        <select id="mode_select" onchange="forum.set_mode(this); draw_config_fields('#config_space', forum, CONFIGURABLES)"></select>
+      </p>
+    </div>
+    <div style="width: 600px; float: right; padding-left: 1em;">
+      <select id="plot_select" onchange="forum.set_plot(this)" style="margin-bottom: 0.5em; float: right;"></select>
+      <div id="plot_space" style="width: 600px; height: 340px; float: right; clear: right;"></div>
+    </div>
+    <div style="width: 15em; float: right; padding-right: 1em;">
       <div id="config_space"></div>
+    </div>
+    </div>
+    <div id="content">
       <canvas id="space" width="3200" height="1800">
         <strong>Your browser does not support canvas.</strong>
       </canvas>

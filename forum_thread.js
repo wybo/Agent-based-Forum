@@ -134,7 +134,7 @@ ForumThread = (function() {
         context = this.forum.context,
         i;
     if (this.forum.options.mode == ABF.MODES.random) {
-      x = 10 + nr % 70 * width_step * 2;
+      x = 10 * ABF.SCL + nr % 70 * width_step * 2;
       y = height_step + Math.floor(nr / 70) * height_step;
       this.posts[0].draw(x, y);
       if (this.posts[0].actor) {
