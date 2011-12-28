@@ -5,8 +5,9 @@
     <script src="jquery.js"></script> 
     <script src="flot/jquery.flot.min.js"></script> 
     <script src="include.js"></script> 
+    <script src="application.js"></script> 
+    <script src="agent_based_forum.js"></script> 
     <script type="text/javascript">
-      $.include('application.js', $.include('agent_based_forum.js'));
       $('document').ready(function() {
         forum = new Forum(ABF.DEFAULT_OPTIONS);
         setup_forum_gui(forum, '#space', '#plot_space', '#start');

@@ -1,15 +1,13 @@
 #!/usr/bin/ruby
 require 'open-uri'
 
-if File.file?("config.rb")
-  require 'config.rb'
-else
-  system "rm *.js.html"
+def systemp(command)
+  puts command
+  system command
 end
-PUBLISH_COMMAND ||= nil
 
 def highlight_file(file_name, important_parts)
-  system "vim #{file_name} -c 'runtime! syntax/2html.vim | wq | q'"
+  systemp "vim #{file_name} -c 'set nonumber | runtime! syntax/2html.vim | wq | q'"
   lines = open("#{file_name}.html").readlines
   open_div = false
   open_for = 0
@@ -48,19 +46,42 @@ def highlight_file(file_name, important_parts)
   open("#{file_name}.html", "w") { |file| file.write(lines.join()) }
 end
 
-system "git commit -a"
-system "git push"
+def run
+  if File.file?("config.rb")
+    require 'config.rb'
+  else
+    systemp "rm *.js.html"
+    const_set("PUBLISH_COMMAND", nil)
+  end
 
-files = Dir.glob("*.js")
-files.delete("jquery.js")
-files.delete("include.js")
-files.push(files.delete("agent_based_forum.js")) # last
-important_parts = []
-files.each do |file_name|
-  highlight_file(file_name, important_parts)
+  systemp "git commit -a"
+  systemp "git push"
+
+  files = Dir.glob("*.js")
+  files.delete("jquery.js")
+  files.delete("include.js")
+  files.delete("application.js")
+  files.delete("experimenter.js")
+  files.delete("experimenter_data.js")
+  files.delete("agent_based_forum.js")
+  files.push(files.delete("forum.js")) # last
+  app_files = files.dup
+  files.push("agent_based_forum.js") # last
+  important_parts = []
+  files.each do |file_name|
+    highlight_file(file_name, important_parts)
+  end
+
+  if PUBLISH_COMMAND
+    systemp "mv agent_based_forum.js agent_based_forum.original.js"
+    systemp "echo 'ABF = {};\n' > agent_based_forum.js"
+    app_files.each do |app_file|
+      systemp "cat #{app_file} >> agent_based_forum.js"
+    end
+    systemp PUBLISH_COMMAND
+    systemp "rm *.js.html"
+    systemp "mv agent_based_forum.original.js agent_based_forum.js"
+  end
 end
-if PUBLISH_COMMAND
-  puts PUBLISH_COMMAND
-  system PUBLISH_COMMAND
-  system "rm *.js.html"
-end
+
+run()

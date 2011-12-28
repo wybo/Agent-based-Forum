@@ -5,12 +5,11 @@
 ABF = {};
 
 // Includes
-$.include('forum.js', [
-      $.include('helpers.js'),
-      $.include('config.js'),
-      $.include('post.js'),
-      $.include('forum_thread.js'),
-      $.include('actor.js')
-    ]);
+$.include('actor.js');
+$.include('helpers.js');
+$.include('config.js');
+$.include('post.js');
+$.include('forum_thread.js');
+$.include('forum.js');
 
 /// Important parts (excerpts)

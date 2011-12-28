@@ -60,6 +60,7 @@ jQuery.extend({
   },
   readyOld: jQuery.ready,
   ready: function () {
+    if (jQuery.isReady) return;
     imReady = true;
     $.each(jQuery.includeStates, function(url, state) {
       if (! state)
